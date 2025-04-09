@@ -673,10 +673,13 @@ var NPCGeneratorModal = class extends import_obsidian.Modal {
       while (subclassSelect.options.length > 1) {
         subclassSelect.remove(1);
       }
-      if (selectedClass == null ? void 0 : selectedClass.subclasses) {
+      if ((selectedClass == null ? void 0 : selectedClass.subclasses) && selectedClass.subclasses.length > 0) {
+        subclassContainer.style.display = "block";
         selectedClass.subclasses.forEach((subclass) => {
           subclassSelect.add(new Option(subclass.name, subclass.name));
         });
+      } else {
+        subclassContainer.style.display = "none";
       }
     });
     classSelect.dispatchEvent(new Event("change"));
@@ -742,9 +745,12 @@ var NPCGeneratorModal = class extends import_obsidian.Modal {
         level: parseInt(levelInput.value, 10),
         race: raceSelect.value,
         class: classSelect.value,
+        subclass: subclassSelect.value,
+        // Always include the subclass selection
         alignment: alignmentSelect.value,
         customParameters: {}
       };
+      console.log(`Selected options: Level ${options.level}, Race ${options.race}, Class ${options.class}, Subclass ${options.subclass}`);
       enabledParams.forEach((param) => {
         if (["spellcasting", "possessions"].includes(param.name)) return;
         const input = customParamsContainer.querySelector(
@@ -913,6 +919,7 @@ var NPCGeneratorModal = class extends import_obsidian.Modal {
         level: this.npc.level,
         race: this.npc.race,
         class: this.npc.class,
+        subclass: this.npc.subclass,
         alignment: this.npc.alignment
       };
       this.npc = this.plugin.generateNPC(options);
@@ -2080,6 +2087,93 @@ var NPCGenerator = class extends import_obsidian3.Plugin {
       customParameters: [],
       statblockFormat: "fantasyStatblock"
     };
+    const fighterClass = defaultSettings.classes.find((c) => c.name === "Fighter");
+    if (fighterClass) {
+      fighterClass.subclasses = [
+        {
+          name: "Champion",
+          description: "A simple but powerful archetype that focuses on weapon combat through improved critical hits and superior physical attributes.",
+          features: [
+            { level: 3, name: "Improved Critical", description: "Your weapon attacks score a critical hit on a roll of 19 or 20." },
+            { level: 7, name: "Remarkable Athlete", description: "You can add half your proficiency bonus to any Strength, Dexterity, or Constitution check you make that doesn't already use your proficiency bonus." }
+          ]
+        },
+        {
+          name: "Battle Master",
+          description: "A skilled warrior who uses combat maneuvers and tactical acumen to control the battlefield.",
+          features: [
+            { level: 3, name: "Combat Superiority", description: "You learn maneuvers that are fueled by special dice called superiority dice." },
+            { level: 3, name: "Student of War", description: "You gain proficiency with one type of artisan's tools of your choice." }
+          ]
+        },
+        {
+          name: "Eldritch Knight",
+          description: "An arcane warrior who combines martial prowess with magical ability, focusing on abjuration and evocation spells.",
+          features: [
+            { level: 3, name: "Spellcasting", description: "You learn to cast wizard spells alongside your martial abilities." },
+            { level: 3, name: "Weapon Bond", description: "You learn a ritual that creates a magical bond between yourself and one weapon." }
+          ]
+        }
+      ];
+    }
+    const wizardClass = defaultSettings.classes.find((c) => c.name === "Wizard");
+    if (wizardClass) {
+      wizardClass.subclasses = [
+        {
+          name: "School of Evocation",
+          description: "Focuses on channeling powerful elemental energies to destroy opponents.",
+          features: [
+            { level: 2, name: "Evocation Savant", description: "The gold and time you must spend to copy an evocation spell into your spellbook is halved." },
+            { level: 2, name: "Sculpt Spells", description: "You can create pockets of relative safety within the effects of your evocation spells." }
+          ]
+        },
+        {
+          name: "School of Abjuration",
+          description: "Specializes in protective magic and warding against attacks and other spells.",
+          features: [
+            { level: 2, name: "Abjuration Savant", description: "The gold and time you must spend to copy an abjuration spell into your spellbook is halved." },
+            { level: 2, name: "Arcane Ward", description: "You can weave abjuration magic around yourself for protection." }
+          ]
+        },
+        {
+          name: "School of Divination",
+          description: "Masters the ability to see into the past, present, and future.",
+          features: [
+            { level: 2, name: "Divination Savant", description: "The gold and time you must spend to copy a divination spell into your spellbook is halved." },
+            { level: 2, name: "Portent", description: "Glimpses of the future allow you to replace attack rolls, saving throws, or ability checks." }
+          ]
+        }
+      ];
+    }
+    const rogueClass = defaultSettings.classes.find((c) => c.name === "Rogue");
+    if (rogueClass) {
+      rogueClass.subclasses = [
+        {
+          name: "Thief",
+          description: "A rogue who excels at stealth, burglary, and using items with great skill.",
+          features: [
+            { level: 3, name: "Fast Hands", description: "You can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools, or use an object." },
+            { level: 3, name: "Second-Story Work", description: "You gain the ability to climb faster than normal and jump farther." }
+          ]
+        },
+        {
+          name: "Assassin",
+          description: "A rogue who specializes in disguise and eliminating targets quickly and efficiently.",
+          features: [
+            { level: 3, name: "Bonus Proficiencies", description: "You gain proficiency with the disguise kit and the poisoner's kit." },
+            { level: 3, name: "Assassinate", description: "You are at your deadliest when you get the drop on your enemies." }
+          ]
+        },
+        {
+          name: "Arcane Trickster",
+          description: "A rogue who enhances their skills with magic, focusing on illusion and enchantment.",
+          features: [
+            { level: 3, name: "Spellcasting", description: "You augment your roguish skills with the ability to cast spells." },
+            { level: 3, name: "Mage Hand Legerdemain", description: "You can make your mage hand invisible, and you can perform additional tasks with it." }
+          ]
+        }
+      ];
+    }
     const savedData = await this.loadData();
     this.settings = {
       races: ((_a = savedData == null ? void 0 : savedData.races) == null ? void 0 : _a.length) > 5 ? savedData.races : defaultSettings.races,
@@ -2109,12 +2203,19 @@ var NPCGenerator = class extends import_obsidian3.Plugin {
     const characterClass = this.settings.classes.find((c) => c.name === mergedOptions.class);
     let subclass = null;
     if (characterClass.subclasses && characterClass.subclasses.length > 0) {
-      if (mergedOptions.subclass && mergedOptions.subclass !== "None") {
+      if (mergedOptions.subclass) {
+        console.log(`Looking for subclass: ${mergedOptions.subclass}`);
         subclass = characterClass.subclasses.find((s) => s.name === mergedOptions.subclass);
-      } else {
+        if (subclass) {
+          console.log(`Found subclass: ${subclass.name}`);
+        } else {
+          console.log(`Subclass not found: ${mergedOptions.subclass}`);
+        }
+      } else if (mergedOptions.subclass !== "None") {
         const subclassLevel = characterClass.name === "Wizard" ? 2 : 3;
         if (mergedOptions.level >= subclassLevel) {
           subclass = characterClass.subclasses[Math.floor(Math.random() * characterClass.subclasses.length)];
+          console.log(`Randomly selected subclass: ${subclass.name}`);
         }
       }
     }
@@ -2213,6 +2314,7 @@ var NPCGenerator = class extends import_obsidian3.Plugin {
     const damageDie = parseInt(attackDamage.split("d")[1]);
     const averageDamage = Math.ceil(damageDie / 2) + 1 + primaryDamageBonus;
     const languageList = ((_g = race.languages) == null ? void 0 : _g.join(", ")) || "Common";
+    const subclassContent = npc.subclass ? this.getSubclassFeatures(characterClass, npc.subclass, npc.level) : "";
     return `\`\`\`statblock
 name: ${npc.name}
 source: NPC Generator
@@ -2255,7 +2357,7 @@ ${npc.traits.map((trait) => `  - name: ${trait}
 ${((_q = characterClass == null ? void 0 : characterClass.features) == null ? void 0 : _q.filter((f) => f.level <= npc.level).map((feature) => `  - name: ${feature.name}
     desc: ${feature.description}
     attack_bonus: 0`).join("\n")) || ""}
-${npc.subclass ? this.getSubclassFeatures(characterClass, npc.subclass, npc.level) : ""}
+${subclassContent}
 actions:
   - name: ${attackType}
     desc: "Melee Weapon Attack: +${primaryAttackBonus} to hit, reach 5 ft., one target. Hit: ${averageDamage} (${attackDamage} + ${primaryDamageBonus}) ${damageType} damage."
@@ -2275,13 +2377,21 @@ ${this.formatPossessions(npc.possessions)}
   // Get subclass features for statblock
   getSubclassFeatures(characterClass, subclassName, level) {
     var _a;
+    console.log(`Getting features for subclass: ${subclassName}`);
     const subclass = (_a = characterClass.subclasses) == null ? void 0 : _a.find((s) => s.name === subclassName);
-    if (!subclass) return "";
-    return subclass.features.filter((feature) => feature.level <= level).map(
-      (feature) => `  - name: ${feature.name} (${subclassName})
-        desc: ${feature.description}
-        attack_bonus: 0`
-    ).join("\n");
+    if (!subclass) {
+      console.log(`Subclass not found: ${subclassName}`);
+      return "";
+    }
+    console.log(`Found subclass: ${subclass.name} with ${subclass.features.length} features`);
+    return subclass.features.filter((feature) => feature.level <= level).map((feature) => {
+      const sanitizeName = feature.name.replace(/['"]/g, "");
+      const sanitizeDesc = feature.description.replace(/['"]/g, "").replace(/`/g, "").replace(/\n/g, " ");
+      console.log(`Adding feature: ${sanitizeName}`);
+      return `  - name: ${sanitizeName} (${subclassName})
+    desc: ${sanitizeDesc}
+    attack_bonus: 0`;
+    }).join("\n");
   }
   /**
    * Format possessions for statblock

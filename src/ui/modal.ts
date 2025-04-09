@@ -82,10 +82,17 @@ export class NPCGeneratorModal extends Modal {
             }
             
             // Add subclass options if available
-            if (selectedClass?.subclasses) {
+            if (selectedClass?.subclasses && selectedClass.subclasses.length > 0) {
+                // Make the subclass container visible
+                subclassContainer.style.display = 'block';
+                
+                // Add each subclass as an option
                 selectedClass.subclasses.forEach(subclass => {
                     subclassSelect.add(new Option(subclass.name, subclass.name));
                 });
+            } else {
+                // Hide the subclass container if no subclasses are available
+                subclassContainer.style.display = 'none';
             }
         });
         
@@ -164,9 +171,13 @@ export class NPCGeneratorModal extends Modal {
                 level: parseInt(levelInput.value, 10),
                 race: raceSelect.value,
                 class: classSelect.value,
+                subclass: subclassSelect.value, // Always include the subclass selection
                 alignment: alignmentSelect.value as Alignment,
                 customParameters: {}
             };
+            
+            console.log(`Selected options: Level ${options.level}, Race ${options.race}, Class ${options.class}, Subclass ${options.subclass}`);
+            
             
             // Collect custom parameter values
             enabledParams.forEach(param => {
@@ -390,6 +401,7 @@ export class NPCGeneratorModal extends Modal {
                 level: this.npc!.level,
                 race: this.npc!.race,
                 class: this.npc!.class,
+                subclass: this.npc!.subclass,
                 alignment: this.npc!.alignment
             };
             

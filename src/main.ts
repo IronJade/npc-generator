@@ -718,6 +718,100 @@ export default class NPCGenerator extends Plugin {
             statblockFormat: "fantasyStatblock"
         };
 
+            // Add subclasses to some of the default classes
+            // Fighter subclasses
+            const fighterClass = defaultSettings.classes.find(c => c.name === "Fighter");
+            if (fighterClass) {
+                fighterClass.subclasses = [
+            {
+                name: "Champion",
+                description: "A simple but powerful archetype that focuses on weapon combat through improved critical hits and superior physical attributes.",
+                features: [
+                    { level: 3, name: "Improved Critical", description: "Your weapon attacks score a critical hit on a roll of 19 or 20." },
+                    { level: 7, name: "Remarkable Athlete", description: "You can add half your proficiency bonus to any Strength, Dexterity, or Constitution check you make that doesn't already use your proficiency bonus." }
+                ]
+            },
+            {
+                name: "Battle Master",
+                description: "A skilled warrior who uses combat maneuvers and tactical acumen to control the battlefield.",
+                features: [
+                    { level: 3, name: "Combat Superiority", description: "You learn maneuvers that are fueled by special dice called superiority dice." },
+                    { level: 3, name: "Student of War", description: "You gain proficiency with one type of artisan's tools of your choice." }
+                ]
+            },
+            {
+                name: "Eldritch Knight",
+                description: "An arcane warrior who combines martial prowess with magical ability, focusing on abjuration and evocation spells.",
+                features: [
+                    { level: 3, name: "Spellcasting", description: "You learn to cast wizard spells alongside your martial abilities." },
+                    { level: 3, name: "Weapon Bond", description: "You learn a ritual that creates a magical bond between yourself and one weapon." }
+                ]
+            }
+        ];
+    }
+
+    // Wizard subclasses
+    const wizardClass = defaultSettings.classes.find(c => c.name === "Wizard");
+    if (wizardClass) {
+        wizardClass.subclasses = [
+            {
+                name: "School of Evocation",
+                description: "Focuses on channeling powerful elemental energies to destroy opponents.",
+                features: [
+                    { level: 2, name: "Evocation Savant", description: "The gold and time you must spend to copy an evocation spell into your spellbook is halved." },
+                    { level: 2, name: "Sculpt Spells", description: "You can create pockets of relative safety within the effects of your evocation spells." }
+                ]
+            },
+            {
+                name: "School of Abjuration",
+                description: "Specializes in protective magic and warding against attacks and other spells.",
+                features: [
+                    { level: 2, name: "Abjuration Savant", description: "The gold and time you must spend to copy an abjuration spell into your spellbook is halved." },
+                    { level: 2, name: "Arcane Ward", description: "You can weave abjuration magic around yourself for protection." }
+                ]
+            },
+            {
+                name: "School of Divination",
+                description: "Masters the ability to see into the past, present, and future.",
+                features: [
+                    { level: 2, name: "Divination Savant", description: "The gold and time you must spend to copy a divination spell into your spellbook is halved." },
+                    { level: 2, name: "Portent", description: "Glimpses of the future allow you to replace attack rolls, saving throws, or ability checks." }
+                ]
+            }
+        ];
+    }
+
+    // Rogue subclasses
+    const rogueClass = defaultSettings.classes.find(c => c.name === "Rogue");
+    if (rogueClass) {
+        rogueClass.subclasses = [
+            {
+                name: "Thief",
+                description: "A rogue who excels at stealth, burglary, and using items with great skill.",
+                features: [
+                    { level: 3, name: "Fast Hands", description: "You can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools, or use an object." },
+                    { level: 3, name: "Second-Story Work", description: "You gain the ability to climb faster than normal and jump farther." }
+                ]
+            },
+            {
+                name: "Assassin",
+                description: "A rogue who specializes in disguise and eliminating targets quickly and efficiently.",
+                features: [
+                    { level: 3, name: "Bonus Proficiencies", description: "You gain proficiency with the disguise kit and the poisoner's kit." },
+                    { level: 3, name: "Assassinate", description: "You are at your deadliest when you get the drop on your enemies." }
+                ]
+            },
+            {
+                name: "Arcane Trickster",
+                description: "A rogue who enhances their skills with magic, focusing on illusion and enchantment.",
+                features: [
+                    { level: 3, name: "Spellcasting", description: "You augment your roguish skills with the ability to cast spells." },
+                    { level: 3, name: "Mage Hand Legerdemain", description: "You can make your mage hand invisible, and you can perform additional tasks with it." }
+                ]
+            }
+        ];
+    }
+
         // Load saved settings
         const savedData = await this.loadData();
     
@@ -759,17 +853,26 @@ export default class NPCGenerator extends Plugin {
         let subclass = null;
         if (characterClass.subclasses && characterClass.subclasses.length > 0) {
             // If a specific subclass is requested, use that
-            if (mergedOptions.subclass && mergedOptions.subclass !== 'None') {
+            if (mergedOptions.subclass) {
+                console.log(`Looking for subclass: ${mergedOptions.subclass}`);
                 subclass = characterClass.subclasses.find(s => s.name === mergedOptions.subclass);
-            } 
-            // Otherwise randomly select a subclass if level is high enough
-            else {
-                const subclassLevel = characterClass.name === "Wizard" ? 2 : 3;
         
+                // Log if we found the subclass or not
+                if (subclass) {
+                    console.log(`Found subclass: ${subclass.name}`);
+                } else {
+                    console.log(`Subclass not found: ${mergedOptions.subclass}`);
+                }
+            } 
+            // Otherwise randomly select a subclass if level is high enough and no specific "None" was selected
+            else if (mergedOptions.subclass !== 'None') {
+                const subclassLevel = characterClass.name === "Wizard" ? 2 : 3;
+
                 if (mergedOptions.level! >= subclassLevel) {
                     subclass = characterClass.subclasses[Math.floor(Math.random() * characterClass.subclasses.length)];
-                }
-            }
+                    console.log(`Randomly selected subclass: ${subclass.name}`);
+        }
+    }
         }
 
         // Generate base ability scores
@@ -911,7 +1014,10 @@ export default class NPCGenerator extends Plugin {
     // Determine languages
     const languageList = race.languages?.join(", ") || "Common";
 
-        return `\`\`\`statblock
+    // Add subclass features separately from regular features
+    const subclassContent = npc.subclass ? this.getSubclassFeatures(characterClass, npc.subclass, npc.level) : '';
+    
+    return `\`\`\`statblock
 name: ${npc.name}
 source: NPC Generator
 size: ${race?.size || "Medium"}
@@ -955,7 +1061,7 @@ ${characterClass?.features?.filter(f => f.level <= npc.level).map(feature =>
 `  - name: ${feature.name}
     desc: ${feature.description}
     attack_bonus: 0`).join('\n') || ''}
-${npc.subclass ? this.getSubclassFeatures(characterClass, npc.subclass, npc.level) : ''}
+${subclassContent}
 actions:
   - name: ${attackType}
     desc: "Melee Weapon Attack: +${primaryAttackBonus} to hit, reach 5 ft., one target. Hit: ${averageDamage} (${attackDamage} + ${primaryDamageBonus}) ${damageType} damage."
@@ -970,21 +1076,37 @@ ${Object.entries(npc.customParameters.spellcasting.slots).filter(([_, slots]) =>
 ).join('\n')}` : ''}
 possessions:
 ${this.formatPossessions(npc.possessions)}\n\`\`\``;
-    }
+}
 
-    // Get subclass features for statblock
-    private getSubclassFeatures(characterClass: CharacterClass, subclassName: string, level: number): string {
-        const subclass = characterClass.subclasses?.find(s => s.name === subclassName);
-        if (!subclass) return '';
-        
-        return subclass.features
-            .filter(feature => feature.level <= level)
-            .map(feature => 
-                `  - name: ${feature.name} (${subclassName})
-        desc: ${feature.description}
-        attack_bonus: 0`
-            ).join('\n');
+// Get subclass features for statblock
+private getSubclassFeatures(characterClass: CharacterClass, subclassName: string, level: number): string {
+    console.log(`Getting features for subclass: ${subclassName}`);
+    
+    const subclass = characterClass.subclasses?.find(s => s.name === subclassName);
+    if (!subclass) {
+        console.log(`Subclass not found: ${subclassName}`);
+        return '';
     }
+    
+    console.log(`Found subclass: ${subclass.name} with ${subclass.features.length} features`);
+    
+    return subclass.features
+        .filter(feature => feature.level <= level)
+        .map(feature => {
+            // Sanitize the feature name and description
+            const sanitizeName = feature.name.replace(/['"]/g, '');
+            const sanitizeDesc = feature.description
+                .replace(/['"]/g, '')
+                .replace(/`/g, '')
+                .replace(/\n/g, ' ');
+            
+            console.log(`Adding feature: ${sanitizeName}`);
+            
+            return `  - name: ${sanitizeName} (${subclassName})
+    desc: ${sanitizeDesc}
+    attack_bonus: 0`;
+        }).join('\n');
+}
 
     /**
      * Format possessions for statblock
