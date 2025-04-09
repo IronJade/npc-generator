@@ -1651,7 +1651,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     const nameContainer = basicRow.createDiv("class-name-container");
     nameContainer.style.flex = "1";
     nameContainer.style.minWidth = "200px";
-    const formContainer = modal.contentEl.createDiv("class-form-container");
+    const formContainer = basicRow.createDiv("class-form-container");
     formContainer.style.display = "grid";
     formContainer.style.gap = "15px";
     new import_obsidian2.Setting(nameContainer).setName("Class Name").addText((text) => {
@@ -1660,7 +1660,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       });
       text.inputEl.style.width = "100%";
     });
-    const detailsContainer = formContainer.createDiv("class-details-container");
+    const detailsContainer = basicRow.createDiv("class-details-container");
     detailsContainer.style.display = "grid";
     detailsContainer.style.gridTemplateColumns = "1fr 1fr";
     detailsContainer.style.gap = "15px";
@@ -1676,7 +1676,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         if (existingClass) existingClass.primaryAbility = value;
       });
     });
-    const spellcastingContainer = formContainer.createDiv("spellcasting-container");
+    const spellcastingContainer = basicRow.createDiv("spellcasting-container");
     const spellcasterCheck = spellcastingContainer.createEl("div", { cls: "setting-item" });
     spellcasterCheck.style.display = "flex";
     spellcasterCheck.style.justifyContent = "space-between";

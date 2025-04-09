@@ -936,7 +936,7 @@ private openSubclassModal(
         nameContainer.style.minWidth = '200px';
         
         // Class Hit Die and Primary Ability in a row
-        const formContainer = modal.contentEl.createDiv('class-form-container');
+        const formContainer = basicRow.createDiv('class-form-container');
         formContainer.style.display = 'grid';
         formContainer.style.gap = '15px';
         
@@ -952,7 +952,7 @@ private openSubclassModal(
         });
         
     // Hit Die and Primary Ability in a row
-    const detailsContainer = formContainer.createDiv('class-details-container');
+    const detailsContainer = basicRow.createDiv('class-details-container');
     detailsContainer.style.display = 'grid';
     detailsContainer.style.gridTemplateColumns = '1fr 1fr';
     detailsContainer.style.gap = '15px';
@@ -992,7 +992,7 @@ private openSubclassModal(
         });
 
     // Spellcasting
-    const spellcastingContainer = formContainer.createDiv('spellcasting-container');
+    const spellcastingContainer = basicRow.createDiv('spellcasting-container');
     const spellcasterCheck = spellcastingContainer.createEl('div', { cls: 'setting-item' });
     spellcasterCheck.style.display = 'flex';
     spellcasterCheck.style.justifyContent = 'space-between';
