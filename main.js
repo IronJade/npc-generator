@@ -975,23 +975,71 @@ var import_obsidian2 = require("obsidian");
 var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
+    this.activeTab = "general";
     this.plugin = plugin;
   }
   display() {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h1", { text: "NPC Generator Settings" });
-    this.addStatblockFormatSection();
-    this.addRacesSection();
-    this.addClassesSection();
-    this.addCustomParametersSection();
+    const navContainer = containerEl.createDiv("nav-container");
+    navContainer.style.display = "flex";
+    navContainer.style.marginBottom = "20px";
+    navContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
+    const createTab = (id, label) => {
+      const tab = navContainer.createEl("button", { text: label });
+      tab.style.padding = "8px 16px";
+      tab.style.border = "none";
+      tab.style.background = "none";
+      tab.style.cursor = "pointer";
+      tab.style.borderRadius = "4px 4px 0 0";
+      tab.style.marginRight = "4px";
+      if (id === this.activeTab) {
+        tab.style.borderBottom = "2px solid var(--interactive-accent)";
+        tab.style.fontWeight = "bold";
+        tab.style.color = "var(--interactive-accent)";
+      }
+      tab.addEventListener("click", () => {
+        this.activeTab = id;
+        this.display();
+      });
+      return tab;
+    };
+    createTab("general", "General");
+    createTab("races", "Races");
+    createTab("classes", "Classes");
+    createTab("parameters", "Custom Parameters");
+    const contentContainer = containerEl.createDiv("content-container");
+    contentContainer.style.maxHeight = "500px";
+    contentContainer.style.overflowY = "auto";
+    contentContainer.style.padding = "10px";
+    contentContainer.style.border = "1px solid var(--background-modifier-border)";
+    contentContainer.style.borderRadius = "4px";
+    switch (this.activeTab) {
+      case "general":
+        this.addStatblockFormatSection(contentContainer);
+        break;
+      case "races":
+        this.addRacesSection(contentContainer);
+        break;
+      case "classes":
+        this.addClassesSection(contentContainer);
+        break;
+      case "parameters":
+        this.addCustomParametersSection(contentContainer);
+        break;
+    }
   }
   /**
    * Add Statblock Format Selection
    */
-  addStatblockFormatSection() {
-    const statblockSection = this.containerEl.createDiv("statblock-format-section");
+  addStatblockFormatSection(contentEl) {
+    const statblockSection = contentEl.createDiv("statblock-format-section");
     statblockSection.createEl("h2", { text: "Statblock Format" });
+    statblockSection.createEl("p", {
+      text: "Select how NPC statblocks should be formatted when inserted into your notes.",
+      cls: "setting-item-description"
+    });
     new import_obsidian2.Setting(statblockSection).setName("Choose Statblock Style").setDesc("Select the format for generated NPC statblocks").addDropdown((dropdown) => {
       dropdown.addOption("fantasyStatblock", "Fantasy Statblock").addOption("basic", "Basic Text").setValue(this.plugin.settings.statblockFormat).onChange(async (value) => {
         this.plugin.settings.statblockFormat = value;
@@ -1002,89 +1050,421 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   /**
    * Add Races Management Section
    */
-  addRacesSection() {
-    const racesSection = this.containerEl.createDiv("races-section");
-    racesSection.createEl("h2", { text: "Races" });
-    new import_obsidian2.Setting(racesSection).setName("Add New Race").setDesc("Create a new playable race for NPC generation").addButton((button) => {
-      return button.setButtonText("Add Race").onClick(() => this.openRaceModal());
+  addRacesSection(contentEl) {
+    const racesSection = contentEl.createDiv("races-section");
+    const headerContainer = racesSection.createDiv("section-header");
+    headerContainer.createEl("h2", { text: "Races" });
+    headerContainer.createEl("p", {
+      text: "Manage the available races for NPC generation.",
+      cls: "setting-item-description"
     });
+    new import_obsidian2.Setting(racesSection).setName("Add New Race").setDesc("Create a new playable race for NPC generation").addButton((button) => {
+      return button.setButtonText("Add Race").setCta().onClick(() => this.openRaceModal());
+    });
+    const racesContainer = racesSection.createDiv("races-container");
+    racesContainer.style.display = "grid";
+    racesContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(250px, 1fr))";
+    racesContainer.style.gap = "10px";
+    racesContainer.style.marginTop = "20px";
     this.plugin.settings.races.forEach((race, index) => {
-      new import_obsidian2.Setting(racesSection).setName(race.name).setDesc(this.formatRaceDescription(race)).addButton((button) => {
-        return button.setButtonText("Edit").onClick(() => this.openRaceModal(race, index));
-      }).addButton((button) => {
-        return button.setButtonText("Delete").setClass("warning").onClick(async () => {
-          if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
-            this.plugin.settings.races.splice(index, 1);
-            await this.plugin.saveSettings();
-            this.display();
-          }
-        });
+      const raceCard = racesContainer.createDiv("race-card");
+      raceCard.style.border = "1px solid var(--background-modifier-border)";
+      raceCard.style.borderRadius = "5px";
+      raceCard.style.padding = "10px";
+      raceCard.style.backgroundColor = "var(--background-secondary)";
+      const raceHeader = raceCard.createDiv("race-header");
+      raceHeader.style.borderBottom = "1px solid var(--background-modifier-border)";
+      raceHeader.style.paddingBottom = "5px";
+      raceHeader.style.marginBottom = "8px";
+      raceHeader.createEl("h3", {
+        text: race.name,
+        attr: { style: "margin: 0; font-size: 1.1em;" }
+      });
+      const raceDescription = raceCard.createDiv("race-description");
+      raceDescription.style.fontSize = "0.9em";
+      raceDescription.style.marginBottom = "10px";
+      raceDescription.style.color = "var(--text-muted)";
+      raceDescription.textContent = this.formatRaceDescription(race);
+      const raceActions = raceCard.createDiv("race-actions");
+      raceActions.style.display = "flex";
+      raceActions.style.justifyContent = "space-between";
+      const editButton = raceActions.createEl("button", { text: "Edit" });
+      editButton.style.padding = "4px 8px";
+      editButton.style.fontSize = "0.8em";
+      editButton.addEventListener("click", () => {
+        this.openRaceModal(race, index);
+      });
+      const deleteButton = raceActions.createEl("button", { text: "Delete" });
+      deleteButton.style.padding = "4px 8px";
+      deleteButton.style.fontSize = "0.8em";
+      deleteButton.style.color = "var(--text-error)";
+      deleteButton.addEventListener("click", async () => {
+        if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
+          this.plugin.settings.races.splice(index, 1);
+          await this.plugin.saveSettings();
+          this.display();
+        }
       });
     });
   }
   /**
    * Add Classes Management Section
    */
-  addClassesSection() {
-    const classesSection = this.containerEl.createDiv("classes-section");
-    classesSection.createEl("h2", { text: "Classes" });
-    new import_obsidian2.Setting(classesSection).setName("Add New Class").setDesc("Create a new character class for NPC generation").addButton((button) => {
-      return button.setButtonText("Add Class").onClick(() => this.openClassModal());
+  addClassesSection(contentEl) {
+    const classesSection = contentEl.createDiv("classes-section");
+    const headerContainer = classesSection.createDiv("section-header");
+    headerContainer.createEl("h2", { text: "Classes" });
+    headerContainer.createEl("p", {
+      text: "Manage the available classes and subclasses for NPC generation.",
+      cls: "setting-item-description"
     });
+    new import_obsidian2.Setting(classesSection).setName("Add New Class").setDesc("Create a new character class for NPC generation").addButton((button) => {
+      return button.setButtonText("Add Class").setCta().onClick(() => this.openClassModal());
+    });
+    const classesContainer = classesSection.createDiv("classes-container");
+    classesContainer.style.marginTop = "15px";
     this.plugin.settings.classes.forEach((characterClass, index) => {
-      new import_obsidian2.Setting(classesSection).setName(characterClass.name).setDesc(this.formatClassDescription(characterClass)).addButton((button) => {
-        return button.setButtonText("Edit").onClick(() => this.openClassModal(characterClass, index));
-      }).addButton((button) => {
-        return button.setButtonText("Delete").setClass("warning").onClick(async () => {
-          if (confirm(`Are you sure you want to delete the ${characterClass.name} class?`)) {
-            this.plugin.settings.classes.splice(index, 1);
-            await this.plugin.saveSettings();
-            this.display();
-          }
+      const classItem = classesContainer.createDiv("class-item");
+      classItem.style.marginBottom = "10px";
+      classItem.style.border = "1px solid var(--background-modifier-border)";
+      classItem.style.borderRadius = "5px";
+      classItem.style.overflow = "hidden";
+      const classHeader = classItem.createDiv("class-header");
+      classHeader.style.padding = "10px";
+      classHeader.style.backgroundColor = "var(--background-secondary)";
+      classHeader.style.cursor = "pointer";
+      classHeader.style.display = "flex";
+      classHeader.style.justifyContent = "space-between";
+      classHeader.style.alignItems = "center";
+      const classTitle = classHeader.createDiv("class-title");
+      classTitle.style.fontWeight = "bold";
+      classTitle.textContent = characterClass.name;
+      const classSummary = classHeader.createDiv("class-summary");
+      classSummary.style.fontSize = "0.9em";
+      classSummary.style.color = "var(--text-muted)";
+      classSummary.textContent = this.formatClassDescription(characterClass);
+      const expandIcon = classHeader.createDiv("expand-icon");
+      expandIcon.textContent = "\u25BC";
+      expandIcon.style.marginLeft = "10px";
+      const classDetails = classItem.createDiv("class-details");
+      classDetails.style.padding = "10px";
+      classDetails.style.borderTop = "1px solid var(--background-modifier-border)";
+      classDetails.style.display = "none";
+      const featuresSection = classDetails.createDiv("features-section");
+      featuresSection.style.marginBottom = "10px";
+      featuresSection.createEl("h4", {
+        text: "Class Features",
+        attr: { style: "margin: 0 0 5px 0; font-size: 1em;" }
+      });
+      if (characterClass.features && characterClass.features.length > 0) {
+        const featuresList = featuresSection.createEl("ul");
+        featuresList.style.margin = "0";
+        featuresList.style.paddingLeft = "20px";
+        characterClass.features.forEach((feature) => {
+          const featureItem = featuresList.createEl("li");
+          featureItem.style.fontSize = "0.9em";
+          featureItem.textContent = `Level ${feature.level}: ${feature.name}`;
         });
+      } else {
+        featuresSection.createEl("p", {
+          text: "No features defined.",
+          attr: { style: "color: var(--text-muted); font-style: italic; margin: 0;" }
+        });
+      }
+      const subclassesSection = classDetails.createDiv("subclasses-section");
+      const subclassHeader = subclassesSection.createDiv("subclass-header");
+      subclassHeader.style.display = "flex";
+      subclassHeader.style.justifyContent = "space-between";
+      subclassHeader.style.alignItems = "center";
+      subclassHeader.style.marginBottom = "5px";
+      subclassHeader.createEl("h4", {
+        text: "Subclasses",
+        attr: { style: "margin: 0; font-size: 1em;" }
+      });
+      const addSubclassButton = subclassHeader.createEl("button", { text: "Add Subclass" });
+      addSubclassButton.style.fontSize = "0.8em";
+      addSubclassButton.style.padding = "2px 6px";
+      addSubclassButton.addEventListener("click", () => {
+        this.openSubclassModal(characterClass, index);
+      });
+      if (characterClass.subclasses && characterClass.subclasses.length > 0) {
+        const subclassesList = subclassesSection.createEl("ul");
+        subclassesList.style.margin = "0";
+        subclassesList.style.paddingLeft = "20px";
+        characterClass.subclasses.forEach((subclass, subclassIndex) => {
+          const subclassItem = subclassesList.createEl("li");
+          subclassItem.style.fontSize = "0.9em";
+          subclassItem.style.marginBottom = "5px";
+          const subclassText = subclassItem.createSpan();
+          subclassText.textContent = subclass.name;
+          const subclassActions = subclassItem.createSpan();
+          subclassActions.style.marginLeft = "10px";
+          const editSubclassButton = subclassActions.createEl("button", { text: "Edit" });
+          editSubclassButton.style.fontSize = "0.7em";
+          editSubclassButton.style.padding = "2px 4px";
+          editSubclassButton.style.marginRight = "5px";
+          editSubclassButton.addEventListener("click", () => {
+            this.openSubclassModal(characterClass, index, subclass, subclassIndex);
+          });
+          const deleteSubclassButton = subclassActions.createEl("button", { text: "Delete" });
+          deleteSubclassButton.style.fontSize = "0.7em";
+          deleteSubclassButton.style.padding = "2px 4px";
+          deleteSubclassButton.style.color = "var(--text-error)";
+          deleteSubclassButton.addEventListener("click", async () => {
+            var _a;
+            if (confirm(`Are you sure you want to delete the ${subclass.name} subclass?`)) {
+              (_a = characterClass.subclasses) == null ? void 0 : _a.splice(subclassIndex, 1);
+              await this.plugin.saveSettings();
+              this.display();
+            }
+          });
+        });
+      } else {
+        subclassesSection.createEl("p", {
+          text: "No subclasses defined.",
+          attr: { style: "color: var(--text-muted); font-style: italic; margin: 0;" }
+        });
+      }
+      const classActions = classDetails.createDiv("class-actions");
+      classActions.style.display = "flex";
+      classActions.style.justifyContent = "flex-end";
+      classActions.style.marginTop = "10px";
+      classActions.style.borderTop = "1px solid var(--background-modifier-border)";
+      classActions.style.paddingTop = "10px";
+      const editButton = classActions.createEl("button", { text: "Edit Class" });
+      editButton.style.marginRight = "10px";
+      editButton.addEventListener("click", () => {
+        this.openClassModal(characterClass, index);
+      });
+      const deleteButton = classActions.createEl("button", { text: "Delete Class" });
+      deleteButton.style.color = "var(--text-error)";
+      deleteButton.addEventListener("click", async () => {
+        if (confirm(`Are you sure you want to delete the ${characterClass.name} class?`)) {
+          this.plugin.settings.classes.splice(index, 1);
+          await this.plugin.saveSettings();
+          this.display();
+        }
+      });
+      classHeader.addEventListener("click", () => {
+        const expanded = classDetails.style.display !== "none";
+        classDetails.style.display = expanded ? "none" : "block";
+        expandIcon.textContent = expanded ? "\u25BC" : "\u25B2";
       });
     });
   }
   /**
    * Add Custom Parameters Management Section
    */
-  addCustomParametersSection() {
-    const customParamsSection = this.containerEl.createDiv("custom-parameters-section");
-    customParamsSection.createEl("h2", { text: "Custom Parameters" });
+  addCustomParametersSection(contentEl) {
+    const customParamsSection = contentEl.createDiv("custom-parameters-section");
+    const headerContainer = customParamsSection.createDiv("section-header");
+    headerContainer.createEl("h2", { text: "Custom Parameters" });
+    headerContainer.createEl("p", {
+      text: "Add custom fields to your NPC generation form and statblocks.",
+      cls: "setting-item-description"
+    });
     new import_obsidian2.Setting(customParamsSection).setName("Add Custom Parameter").setDesc("Create a new custom parameter for NPC generation").addButton((button) => {
-      return button.setButtonText("Add Parameter").onClick(() => this.openCustomParameterModal());
+      return button.setButtonText("Add Parameter").setCta().onClick(() => this.openCustomParameterModal());
     });
     const customParams = this.plugin.settings.customParameters.filter(
       (param) => param.name !== "spellcasting" && param.name !== "possessions"
     );
+    const paramsContainer = customParamsSection.createDiv("params-container");
+    paramsContainer.style.marginTop = "20px";
     if (customParams.length === 0) {
-      customParamsSection.createEl("p", {
+      paramsContainer.createEl("p", {
         text: "No custom parameters defined.",
-        attr: { style: "color: #666; font-style: italic; text-align: center;" }
+        attr: { style: "color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;" }
       });
     } else {
+      const paramTable = paramsContainer.createEl("table");
+      paramTable.style.width = "100%";
+      paramTable.style.borderCollapse = "collapse";
+      const thead = paramTable.createEl("thead");
+      const headerRow = thead.createEl("tr");
+      headerRow.style.backgroundColor = "var(--background-secondary)";
+      ["Parameter", "Format", "Enabled", "Actions"].forEach((heading) => {
+        const th = headerRow.createEl("th");
+        th.style.padding = "8px";
+        th.style.textAlign = "left";
+        th.style.borderBottom = "1px solid var(--background-modifier-border)";
+        th.textContent = heading;
+      });
+      const tbody = paramTable.createEl("tbody");
       customParams.forEach((param) => {
-        new import_obsidian2.Setting(customParamsSection).setName(param.label).setDesc(`Name: ${param.name}, Format: ${param.format}`).addToggle((toggle) => {
-          toggle.setValue(param.enabled).onChange(async (value) => {
-            param.enabled = value;
+        const row = tbody.createEl("tr");
+        row.style.borderBottom = "1px solid var(--background-modifier-border)";
+        const nameCell = row.createEl("td");
+        nameCell.style.padding = "8px";
+        const paramName = nameCell.createEl("div", { text: param.label });
+        paramName.style.fontWeight = "bold";
+        const paramId = nameCell.createEl("div", { text: param.name });
+        paramId.style.fontSize = "0.8em";
+        paramId.style.color = "var(--text-muted)";
+        const formatCell = row.createEl("td");
+        formatCell.style.padding = "8px";
+        formatCell.style.fontFamily = "var(--font-monospace)";
+        formatCell.style.fontSize = "0.9em";
+        formatCell.textContent = param.format;
+        const enabledCell = row.createEl("td");
+        enabledCell.style.padding = "8px";
+        const toggle = document.createElement("input");
+        toggle.type = "checkbox";
+        toggle.checked = param.enabled;
+        toggle.addEventListener("change", async () => {
+          param.enabled = toggle.checked;
+          await this.plugin.saveSettings();
+        });
+        enabledCell.appendChild(toggle);
+        const actionsCell = row.createEl("td");
+        actionsCell.style.padding = "8px";
+        const editButton = actionsCell.createEl("button", { text: "Edit" });
+        editButton.style.marginRight = "8px";
+        editButton.style.padding = "4px 8px";
+        editButton.style.fontSize = "0.8em";
+        editButton.addEventListener("click", () => {
+          this.openCustomParameterModal(param);
+        });
+        const deleteButton = actionsCell.createEl("button", { text: "Delete" });
+        deleteButton.style.padding = "4px 8px";
+        deleteButton.style.fontSize = "0.8em";
+        deleteButton.style.color = "var(--text-error)";
+        deleteButton.addEventListener("click", async () => {
+          if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
+            this.plugin.settings.customParameters.splice(
+              this.plugin.settings.customParameters.indexOf(param),
+              1
+            );
             await this.plugin.saveSettings();
-          });
-        }).addButton((button) => {
-          return button.setButtonText("Edit").onClick(() => this.openCustomParameterModal(param));
-        }).addButton((button) => {
-          return button.setButtonText("Delete").setClass("warning").onClick(async () => {
-            if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
-              this.plugin.settings.customParameters.splice(
-                this.plugin.settings.customParameters.indexOf(param),
-                1
-              );
-              await this.plugin.saveSettings();
-              this.display();
-            }
-          });
+            this.display();
+          }
         });
       });
     }
+  }
+  /**
+   * Open Subclass Modal for Adding/Editing
+   */
+  openSubclassModal(characterClass, classIndex, existingSubclass, subclassIndex) {
+    const modal = new import_obsidian2.Modal(this.app);
+    modal.titleEl.setText(existingSubclass ? `Edit ${existingSubclass.name} Subclass` : `Add New Subclass for ${characterClass.name}`);
+    modal.contentEl.style.width = "500px";
+    new import_obsidian2.Setting(modal.contentEl).setName("Subclass Name").addText((text) => {
+      text.setValue((existingSubclass == null ? void 0 : existingSubclass.name) || "").setPlaceholder("Enter subclass name").onChange((value) => {
+        if (existingSubclass) existingSubclass.name = value;
+      });
+    });
+    new import_obsidian2.Setting(modal.contentEl).setName("Description").setDesc("Brief description of the subclass and its strengths").addTextArea((text) => {
+      text.setValue((existingSubclass == null ? void 0 : existingSubclass.description) || "").setPlaceholder("Description of the subclass...").onChange((value) => {
+        if (existingSubclass) existingSubclass.description = value;
+      });
+      const textEl = text.inputEl;
+      textEl.style.width = "100%";
+      textEl.style.height = "100px";
+    });
+    const featuresContainer = modal.contentEl.createDiv("subclass-features");
+    featuresContainer.createEl("h3", { text: "Subclass Features" });
+    featuresContainer.style.marginTop = "20px";
+    const featuresList = featuresContainer.createDiv("features-list");
+    const addFeatureRow = (feature) => {
+      var _a;
+      const featureRow = featuresList.createDiv("feature-row");
+      featureRow.style.display = "flex";
+      featureRow.style.marginBottom = "10px";
+      featureRow.style.gap = "10px";
+      const levelInput = document.createElement("input");
+      levelInput.type = "number";
+      levelInput.min = "1";
+      levelInput.max = "20";
+      levelInput.value = ((_a = feature == null ? void 0 : feature.level) == null ? void 0 : _a.toString()) || "3";
+      levelInput.style.width = "60px";
+      levelInput.placeholder = "Level";
+      featureRow.appendChild(levelInput);
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = (feature == null ? void 0 : feature.name) || "";
+      nameInput.style.flex = "1";
+      nameInput.placeholder = "Feature name";
+      featureRow.appendChild(nameInput);
+      const descInput = document.createElement("input");
+      descInput.type = "text";
+      descInput.value = (feature == null ? void 0 : feature.description) || "";
+      descInput.style.flex = "2";
+      descInput.placeholder = "Feature description";
+      featureRow.appendChild(descInput);
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "\xD7";
+      deleteBtn.style.color = "var(--text-error)";
+      deleteBtn.addEventListener("click", () => {
+        featureRow.remove();
+      });
+      featureRow.appendChild(deleteBtn);
+      return { row: featureRow, levelInput, nameInput, descInput };
+    };
+    if ((existingSubclass == null ? void 0 : existingSubclass.features) && existingSubclass.features.length > 0) {
+      existingSubclass.features.forEach((feature) => {
+        addFeatureRow(feature);
+      });
+    } else {
+      addFeatureRow();
+    }
+    const addFeatureButton = featuresContainer.createEl("button", { text: "Add Feature" });
+    addFeatureButton.style.marginTop = "10px";
+    addFeatureButton.addEventListener("click", () => {
+      addFeatureRow();
+    });
+    const buttonContainer = modal.contentEl.createDiv("button-container");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "20px";
+    buttonContainer.style.gap = "10px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.addEventListener("click", () => {
+      modal.close();
+    });
+    const saveButton = buttonContainer.createEl("button", {
+      text: "Save Subclass",
+      cls: "mod-cta"
+    });
+    saveButton.addEventListener("click", async () => {
+      const nameInput = modal.contentEl.querySelector('input[placeholder="Enter subclass name"]');
+      const descriptionInput = modal.contentEl.querySelector('textarea[placeholder="Description of the subclass..."]');
+      if (!nameInput.value.trim()) {
+        new import_obsidian2.Notice("Subclass name is required");
+        return;
+      }
+      const features = [];
+      const featureRows = featuresList.querySelectorAll(".feature-row");
+      featureRows.forEach((row) => {
+        const inputs = row.querySelectorAll("input");
+        if (inputs[1].value.trim()) {
+          features.push({
+            level: parseInt(inputs[0].value, 10) || 3,
+            name: inputs[1].value.trim(),
+            description: inputs[2].value.trim() || "No description provided."
+          });
+        }
+      });
+      features.sort((a, b) => a.level - b.level);
+      const subclass = {
+        name: nameInput.value.trim(),
+        description: descriptionInput.value.trim() || "No description provided.",
+        features
+      };
+      if (!characterClass.subclasses) {
+        characterClass.subclasses = [];
+      }
+      if (existingSubclass && subclassIndex !== void 0) {
+        characterClass.subclasses[subclassIndex] = subclass;
+      } else {
+        characterClass.subclasses.push(subclass);
+      }
+      this.plugin.settings.classes[classIndex] = characterClass;
+      await this.plugin.saveSettings();
+      this.display();
+      modal.close();
+    });
+    modal.open();
   }
   /**
    * Open Race Modal for Adding/Editing
@@ -1115,7 +1495,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       traitItem.createEl("span", { text: trait });
       traitItem.createEl("button", {
         text: "\xD7",
-        attr: { style: "margin-left: 10px; color: red;" }
+        attr: { style: "margin-left: 10px; color: var(--text-error);" }
       }).addEventListener("click", () => {
         if (existingRace) {
           existingRace.traits.splice(traitIndex, 1);
@@ -1124,10 +1504,14 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       });
     });
     const newTraitContainer = modal.contentEl.createDiv("new-trait-input");
+    newTraitContainer.style.display = "flex";
+    newTraitContainer.style.gap = "10px";
+    newTraitContainer.style.marginTop = "10px";
     const traitInput = newTraitContainer.createEl("input", {
       type: "text",
       placeholder: "Add a new trait"
     });
+    traitInput.style.flex = "1";
     const addTraitButton = newTraitContainer.createEl("button", { text: "Add Trait" });
     addTraitButton.addEventListener("click", () => {
       const newTrait = traitInput.value.trim();
@@ -1147,7 +1531,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         traitItem.createEl("span", { text: newTrait });
         traitItem.createEl("button", {
           text: "\xD7",
-          attr: { style: "margin-left: 10px; color: red;" }
+          attr: { style: "margin-left: 10px; color: var(--text-error);" }
         }).addEventListener("click", () => {
           existingRace.traits.splice(existingRace.traits.length - 1, 1);
           traitItem.remove();
@@ -1155,12 +1539,84 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         traitInput.value = "";
       }
     });
-    const saveButton = modal.contentEl.createEl("button", { text: "Save" });
+    new import_obsidian2.Setting(modal.contentEl).setName("Size").addDropdown((dropdown) => {
+      dropdown.addOption("Small", "Small").addOption("Medium", "Medium").addOption("Large", "Large").setValue((existingRace == null ? void 0 : existingRace.size) || "Medium").onChange((value) => {
+        if (existingRace) existingRace.size = value;
+      });
+    });
+    new import_obsidian2.Setting(modal.contentEl).setName("Speed").addSlider((slider) => {
+      slider.setLimits(20, 40, 5).setValue((existingRace == null ? void 0 : existingRace.speed) || 30).setDynamicTooltip().onChange((value) => {
+        if (existingRace) existingRace.speed = value;
+      });
+    });
+    const languagesContainer = modal.contentEl.createDiv("race-languages");
+    languagesContainer.createEl("h3", { text: "Languages" });
+    const commonLanguages = [
+      "Common",
+      "Dwarvish",
+      "Elvish",
+      "Giant",
+      "Gnomish",
+      "Goblin",
+      "Halfling",
+      "Orc",
+      "Abyssal",
+      "Celestial",
+      "Draconic",
+      "Deep Speech",
+      "Infernal",
+      "Primordial",
+      "Sylvan",
+      "Undercommon"
+    ];
+    const languagesList = languagesContainer.createDiv("languages-list");
+    languagesList.style.display = "grid";
+    languagesList.style.gridTemplateColumns = "repeat(3, 1fr)";
+    languagesList.style.gap = "5px";
+    commonLanguages.forEach((language) => {
+      const languageCheck = languagesList.createDiv("language-check");
+      languageCheck.style.display = "flex";
+      languageCheck.style.alignItems = "center";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = (existingRace == null ? void 0 : existingRace.languages.includes(language)) || false;
+      checkbox.id = `lang-${language}`;
+      languageCheck.appendChild(checkbox);
+      const label = document.createElement("label");
+      label.textContent = language;
+      label.htmlFor = `lang-${language}`;
+      label.style.marginLeft = "5px";
+      languageCheck.appendChild(label);
+    });
+    const buttonContainer = modal.contentEl.createDiv("button-container");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "20px";
+    buttonContainer.style.gap = "10px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.addEventListener("click", () => {
+      modal.close();
+    });
+    const saveButton = buttonContainer.createEl("button", {
+      text: "Save Race",
+      cls: "mod-cta"
+    });
     saveButton.addEventListener("click", async () => {
       if (!existingRace || !existingRace.name) {
         new import_obsidian2.Notice("Race name is required");
         return;
       }
+      const selectedLanguages = [];
+      commonLanguages.forEach((language) => {
+        const checkbox = document.getElementById(`lang-${language}`);
+        if (checkbox && checkbox.checked) {
+          selectedLanguages.push(language);
+        }
+      });
+      if (selectedLanguages.length === 0) {
+        selectedLanguages.push("Common");
+      }
+      existingRace.languages = selectedLanguages;
       if (index !== void 0) {
         this.plugin.settings.races[index] = existingRace;
       } else {
@@ -1178,35 +1634,304 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   openClassModal(existingClass, index) {
     const modal = new import_obsidian2.Modal(this.app);
     modal.titleEl.setText(existingClass ? `Edit ${existingClass.name} Class` : "Add New Class");
-    new import_obsidian2.Setting(modal.contentEl).setName("Class Name").addText((text) => {
-      text.setValue((existingClass == null ? void 0 : existingClass.name) || "").onChange((value) => {
+    modal.contentEl.style.width = "800px";
+    modal.contentEl.style.maxWidth = "80vw";
+    modal.contentEl.style.height = "80vh";
+    modal.contentEl.style.maxHeight = "800px";
+    modal.contentEl.style.display = "flex";
+    modal.contentEl.style.flexDirection = "column";
+    const scrollContainer = modal.contentEl.createDiv("scroll-container");
+    scrollContainer.style.overflowY = "auto";
+    scrollContainer.style.overflowX = "hidden";
+    scrollContainer.style.flex = "1";
+    scrollContainer.style.padding = "0 20px";
+    const basicInfoContainer = scrollContainer.createDiv("basic-class-info");
+    basicInfoContainer.style.marginBottom = "20px";
+    basicInfoContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
+    basicInfoContainer.style.paddingBottom = "15px";
+    new import_obsidian2.Setting(basicInfoContainer).setName("Class Name").addText((text) => {
+      text.setValue((existingClass == null ? void 0 : existingClass.name) || "").setPlaceholder("Class name").onChange((value) => {
         if (existingClass) existingClass.name = value;
       });
     });
-    new import_obsidian2.Setting(modal.contentEl).setName("Hit Die").addDropdown((dropdown) => {
+    const basicRow = basicInfoContainer.createDiv("basic-row");
+    basicRow.style.display = "flex";
+    basicRow.style.gap = "20px";
+    const hitDieContainer = basicRow.createDiv("hit-die-container");
+    hitDieContainer.style.flex = "1";
+    new import_obsidian2.Setting(hitDieContainer).setName("Hit Die").addDropdown((dropdown) => {
       dropdown.addOption("6", "d6").addOption("8", "d8").addOption("10", "d10").addOption("12", "d12").setValue(((existingClass == null ? void 0 : existingClass.hitDie) || 8).toString()).onChange((value) => {
         if (existingClass) existingClass.hitDie = parseInt(value);
       });
     });
-    new import_obsidian2.Setting(modal.contentEl).setName("Primary Ability").addDropdown((dropdown) => {
+    const abilityContainer = basicRow.createDiv("ability-container");
+    abilityContainer.style.flex = "1";
+    new import_obsidian2.Setting(abilityContainer).setName("Primary Ability").addDropdown((dropdown) => {
       dropdown.addOption("str", "STR").addOption("dex", "DEX").addOption("con", "CON").addOption("int", "INT").addOption("wis", "WIS").addOption("cha", "CHA").setValue((existingClass == null ? void 0 : existingClass.primaryAbility) || "str").onChange((value) => {
         if (existingClass) existingClass.primaryAbility = value;
       });
     });
-    const savingThrowsContainer = modal.contentEl.createDiv("saving-throws");
-    savingThrowsContainer.createEl("h3", { text: "Saving Throws" });
-    const abilityNames = ["str", "dex", "con", "int", "wis", "cha"];
-    const savingThrowCheckboxes = {};
-    abilityNames.forEach((ability) => {
-      const setting = new import_obsidian2.Setting(savingThrowsContainer).setName(ability.toUpperCase());
+    const classTabsContainer = scrollContainer.createDiv("class-tabs");
+    classTabsContainer.style.display = "flex";
+    classTabsContainer.style.flexWrap = "wrap";
+    classTabsContainer.style.gap = "5px";
+    classTabsContainer.style.marginBottom = "10px";
+    classTabsContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
+    classTabsContainer.style.paddingBottom = "10px";
+    let activeClassTab = "saves";
+    const classTabContent = scrollContainer.createDiv("class-tab-content");
+    classTabContent.style.padding = "15px 0";
+    classTabContent.style.minHeight = "300px";
+    const showClassTab = (tabId) => {
+      activeClassTab = tabId;
+      const tabs = classTabsContainer.querySelectorAll("button");
+      tabs.forEach((tab) => {
+        if (tab.id === `tab-${tabId}`) {
+          tab.style.borderBottom = "2px solid var(--interactive-accent)";
+          tab.style.color = "var(--interactive-accent)";
+          tab.style.fontWeight = "bold";
+        } else {
+          tab.style.borderBottom = "none";
+          tab.style.color = "var(--text-normal)";
+          tab.style.fontWeight = "normal";
+        }
+      });
+      classTabContent.empty();
+      switch (tabId) {
+        case "saves":
+          this.renderSavingThrowsTab(classTabContent, existingClass);
+          break;
+        case "skills":
+          this.renderSkillsTab(classTabContent, existingClass);
+          break;
+        case "features":
+          this.renderFeaturesTab(classTabContent, existingClass);
+          break;
+        case "spellcasting":
+          this.renderSpellcastingTab(classTabContent, existingClass);
+          break;
+        case "proficiencies":
+          this.renderProficienciesTab(classTabContent, existingClass);
+          break;
+      }
+    };
+    const createClassTab = (id, label) => {
+      const tab = classTabsContainer.createEl("button", {
+        text: label,
+        attr: { id: `tab-${id}` }
+      });
+      tab.style.padding = "8px 16px";
+      tab.style.border = "none";
+      tab.style.borderRadius = "4px";
+      tab.style.background = "var(--background-secondary)";
+      tab.style.cursor = "pointer";
+      if (id === activeClassTab) {
+        tab.style.borderBottom = "2px solid var(--interactive-accent)";
+        tab.style.color = "var(--interactive-accent)";
+        tab.style.fontWeight = "bold";
+      }
+      tab.addEventListener("click", () => {
+        showClassTab(id);
+      });
+    };
+    createClassTab("saves", "Saving Throws");
+    createClassTab("skills", "Skills");
+    createClassTab("features", "Features");
+    createClassTab("spellcasting", "Spellcasting");
+    createClassTab("proficiencies", "Proficiencies");
+    showClassTab("saves");
+    const buttonContainer = modal.contentEl.createDiv("button-container");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.margin = "20px 0 10px 0";
+    buttonContainer.style.gap = "10px";
+    buttonContainer.style.padding = "10px 20px";
+    buttonContainer.style.borderTop = "1px solid var(--background-modifier-border)";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.style.minWidth = "80px";
+    cancelButton.addEventListener("click", () => {
+      modal.close();
+    });
+    const saveButton = buttonContainer.createEl("button", {
+      text: "Save Class",
+      cls: "mod-cta"
+    });
+    saveButton.style.minWidth = "120px";
+    saveButton.addEventListener("click", async () => {
+      const nameInput = basicInfoContainer.querySelector('input[placeholder="Class name"]');
+      if (!nameInput || !nameInput.value.trim()) {
+        new import_obsidian2.Notice("Class name is required");
+        return;
+      }
+      if (!existingClass) {
+        existingClass = {
+          name: nameInput.value.trim(),
+          hitDie: 8,
+          primaryAbility: "str",
+          savingThrows: ["str", "con"],
+          skills: [],
+          skillChoices: 2,
+          proficiencies: {
+            weapons: [],
+            armor: [],
+            tools: []
+          },
+          features: []
+        };
+      }
+      existingClass.savingThrows = [];
+      const abilities = ["str", "dex", "con", "int", "wis", "cha"];
+      abilities.forEach((ability) => {
+        const checkbox = scrollContainer.querySelector(`#save-${ability}`);
+        if (checkbox && checkbox.checked) {
+          existingClass.savingThrows.push(ability);
+        }
+      });
+      existingClass.skills = [];
+      const allSkills = [
+        "Acrobatics",
+        "Animal Handling",
+        "Arcana",
+        "Athletics",
+        "Deception",
+        "History",
+        "Insight",
+        "Intimidation",
+        "Investigation",
+        "Medicine",
+        "Nature",
+        "Perception",
+        "Performance",
+        "Persuasion",
+        "Religion",
+        "Sleight of Hand",
+        "Stealth",
+        "Survival"
+      ];
+      allSkills.forEach((skill) => {
+        const checkbox = scrollContainer.querySelector(`#skill-${skill}`);
+        if (checkbox && checkbox.checked) {
+          existingClass.skills.push(skill);
+        }
+      });
+      const skillChoicesInput = scrollContainer.querySelector("#skill-choices");
+      if (skillChoicesInput) {
+        existingClass.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
+      }
+      existingClass.features = [];
+      const featureRows = scrollContainer.querySelectorAll(".feature-row");
+      featureRows.forEach((row) => {
+        const inputs = row.querySelectorAll("input");
+        if (inputs.length >= 3 && inputs[1].value.trim()) {
+          existingClass.features.push({
+            level: parseInt(inputs[0].value, 10) || 1,
+            name: inputs[1].value.trim(),
+            description: inputs[2].value.trim() || "No description provided."
+          });
+        }
+      });
+      existingClass.proficiencies.weapons = [];
+      const weaponsInputs = scrollContainer.querySelectorAll('input[name="weapon-prof"]');
+      weaponsInputs.forEach((input) => {
+        if (input.value.trim()) {
+          existingClass.proficiencies.weapons.push(input.value.trim());
+        }
+      });
+      existingClass.proficiencies.armor = [];
+      const armorInputs = scrollContainer.querySelectorAll('input[name="armor-prof"]');
+      armorInputs.forEach((input) => {
+        if (input.value.trim()) {
+          existingClass.proficiencies.armor.push(input.value.trim());
+        }
+      });
+      existingClass.proficiencies.tools = [];
+      const toolInputs = scrollContainer.querySelectorAll('input[name="tool-prof"]');
+      toolInputs.forEach((input) => {
+        if (input.value.trim()) {
+          existingClass.proficiencies.tools.push(input.value.trim());
+        }
+      });
+      const isSpellcaster = scrollContainer.querySelector("#is-spellcaster");
+      if (isSpellcaster && isSpellcaster.checked) {
+        const spellAbility = scrollContainer.querySelector("#spell-ability");
+        const prepareSpells = scrollContainer.querySelector("#prepare-spells");
+        existingClass.spellcasting = {
+          ability: spellAbility.value,
+          prepareSpells: prepareSpells.checked
+        };
+      } else {
+        delete existingClass.spellcasting;
+      }
+      if (index !== void 0) {
+        this.plugin.settings.classes[index] = existingClass;
+      } else {
+        this.plugin.settings.classes.push(existingClass);
+      }
+      await this.plugin.saveSettings();
+      this.display();
+      modal.close();
+    });
+    modal.open();
+  }
+  /**
+   * Render Saving Throws Tab
+   */
+  renderSavingThrowsTab(container, existingClass) {
+    container.createEl("h3", { text: "Saving Throw Proficiencies" });
+    container.createEl("p", {
+      text: "Select which ability saving throws this class is proficient in (typically two).",
+      cls: "setting-item-description"
+    });
+    const savesContainer = container.createDiv("saves-container");
+    savesContainer.style.display = "grid";
+    savesContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+    savesContainer.style.gap = "10px";
+    savesContainer.style.marginTop = "10px";
+    const abilities = ["str", "dex", "con", "int", "wis", "cha"];
+    abilities.forEach((ability) => {
+      const saveCheck = savesContainer.createDiv("save-check");
+      saveCheck.style.display = "flex";
+      saveCheck.style.alignItems = "center";
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = (existingClass == null ? void 0 : existingClass.savingThrows.includes(ability)) || false;
-      setting.controlEl.appendChild(checkbox);
-      savingThrowCheckboxes[ability] = checkbox;
+      checkbox.id = `save-${ability}`;
+      saveCheck.appendChild(checkbox);
+      const label = document.createElement("label");
+      label.textContent = ability.toUpperCase();
+      label.htmlFor = `save-${ability}`;
+      label.style.marginLeft = "5px";
+      saveCheck.appendChild(label);
     });
-    const skillsContainer = modal.contentEl.createDiv("class-skills");
-    skillsContainer.createEl("h3", { text: "Class Skills" });
+  }
+  /**
+   * Render Skills Tab
+   */
+  renderSkillsTab(container, existingClass) {
+    container.createEl("h3", { text: "Class Skills" });
+    container.createEl("p", {
+      text: "Select which skills this class can choose proficiencies from.",
+      cls: "setting-item-description"
+    });
+    const skillChoiceContainer = container.createDiv("skill-choice-container");
+    skillChoiceContainer.style.marginBottom = "15px";
+    skillChoiceContainer.createEl("label", {
+      text: "Number of skill choices: ",
+      attr: { for: "skill-choices" }
+    });
+    const skillChoiceInput = document.createElement("input");
+    skillChoiceInput.type = "number";
+    skillChoiceInput.id = "skill-choices";
+    skillChoiceInput.min = "1";
+    skillChoiceInput.max = "8";
+    skillChoiceInput.value = ((existingClass == null ? void 0 : existingClass.skillChoices) || 2).toString();
+    skillChoiceInput.style.width = "60px";
+    skillChoiceInput.style.marginLeft = "10px";
+    skillChoiceContainer.appendChild(skillChoiceInput);
+    const skillsContainer = container.createDiv("skills-container");
+    skillsContainer.style.display = "grid";
+    skillsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+    skillsContainer.style.gap = "10px";
     const allSkills = [
       "Acrobatics",
       "Animal Handling",
@@ -1227,37 +1952,220 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       "Stealth",
       "Survival"
     ];
-    const skillCheckboxes = {};
     allSkills.forEach((skill) => {
-      const setting = new import_obsidian2.Setting(skillsContainer).setName(skill);
+      const skillCheck = skillsContainer.createDiv("skill-check");
+      skillCheck.style.display = "flex";
+      skillCheck.style.alignItems = "center";
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = (existingClass == null ? void 0 : existingClass.skills.includes(skill)) || false;
-      setting.controlEl.appendChild(checkbox);
-      skillCheckboxes[skill] = checkbox;
+      checkbox.id = `skill-${skill}`;
+      skillCheck.appendChild(checkbox);
+      const label = document.createElement("label");
+      label.textContent = skill;
+      label.htmlFor = `skill-${skill}`;
+      label.style.marginLeft = "5px";
+      skillCheck.appendChild(label);
     });
-    const saveButton = modal.contentEl.createEl("button", { text: "Save" });
-    saveButton.addEventListener("click", async () => {
-      if (!existingClass || !existingClass.name) {
-        new import_obsidian2.Notice("Class name is required");
-        return;
-      }
-      existingClass.savingThrows = abilityNames.filter(
-        (ability) => savingThrowCheckboxes[ability].checked
-      );
-      existingClass.skills = allSkills.filter(
-        (skill) => skillCheckboxes[skill].checked
-      );
-      if (index !== void 0) {
-        this.plugin.settings.classes[index] = existingClass;
-      } else {
-        this.plugin.settings.classes.push(existingClass);
-      }
-      await this.plugin.saveSettings();
-      this.display();
-      modal.close();
+  }
+  /**
+   * Render Features Tab
+   */
+  renderFeaturesTab(container, existingClass) {
+    container.createEl("h3", { text: "Class Features" });
+    container.createEl("p", {
+      text: "Define the features this class gains as it levels up.",
+      cls: "setting-item-description"
     });
-    modal.open();
+    const featuresContainer = container.createDiv("features-container");
+    featuresContainer.style.marginTop = "10px";
+    const addFeatureRow = (feature) => {
+      var _a;
+      const featureRow = featuresContainer.createDiv("feature-row");
+      featureRow.style.display = "flex";
+      featureRow.style.marginBottom = "10px";
+      featureRow.style.gap = "10px";
+      const levelInput = document.createElement("input");
+      levelInput.type = "number";
+      levelInput.min = "1";
+      levelInput.max = "20";
+      levelInput.value = ((_a = feature == null ? void 0 : feature.level) == null ? void 0 : _a.toString()) || "1";
+      levelInput.style.width = "60px";
+      levelInput.placeholder = "Level";
+      featureRow.appendChild(levelInput);
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = (feature == null ? void 0 : feature.name) || "";
+      nameInput.style.flex = "1";
+      nameInput.placeholder = "Feature name";
+      featureRow.appendChild(nameInput);
+      const descInput = document.createElement("input");
+      descInput.type = "text";
+      descInput.value = (feature == null ? void 0 : feature.description) || "";
+      descInput.style.flex = "2";
+      descInput.placeholder = "Feature description";
+      featureRow.appendChild(descInput);
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "\xD7";
+      deleteBtn.style.color = "var(--text-error)";
+      deleteBtn.addEventListener("click", () => {
+        featureRow.remove();
+      });
+      featureRow.appendChild(deleteBtn);
+      return { row: featureRow, levelInput, nameInput, descInput };
+    };
+    if ((existingClass == null ? void 0 : existingClass.features) && existingClass.features.length > 0) {
+      existingClass.features.forEach((feature) => {
+        addFeatureRow(feature);
+      });
+    } else {
+      addFeatureRow();
+    }
+    const addFeatureButton = container.createEl("button", { text: "Add Feature" });
+    addFeatureButton.style.marginTop = "10px";
+    addFeatureButton.addEventListener("click", () => {
+      addFeatureRow();
+    });
+  }
+  /**
+   * Render Spellcasting Tab
+   */
+  renderSpellcastingTab(container, existingClass) {
+    var _a, _b;
+    container.createEl("h3", { text: "Spellcasting" });
+    const spellcasterContainer = container.createDiv("spellcaster-toggle");
+    spellcasterContainer.style.marginBottom = "15px";
+    const spellcasterCheck = document.createElement("input");
+    spellcasterCheck.type = "checkbox";
+    spellcasterCheck.id = "is-spellcaster";
+    spellcasterCheck.checked = (existingClass == null ? void 0 : existingClass.spellcasting) !== void 0;
+    spellcasterContainer.appendChild(spellcasterCheck);
+    const spellcasterLabel = document.createElement("label");
+    spellcasterLabel.textContent = " This class can cast spells";
+    spellcasterLabel.htmlFor = "is-spellcaster";
+    spellcasterLabel.style.marginLeft = "5px";
+    spellcasterContainer.appendChild(spellcasterLabel);
+    const spellOptionsContainer = container.createDiv("spell-options");
+    spellOptionsContainer.style.display = (existingClass == null ? void 0 : existingClass.spellcasting) ? "block" : "none";
+    const spellAbilityContainer = spellOptionsContainer.createDiv("spell-ability-container");
+    spellAbilityContainer.style.marginBottom = "10px";
+    spellAbilityContainer.createEl("label", {
+      text: "Spellcasting Ability: ",
+      attr: { for: "spell-ability" }
+    });
+    const spellAbilitySelect = document.createElement("select");
+    spellAbilitySelect.id = "spell-ability";
+    spellAbilitySelect.style.marginLeft = "10px";
+    const abilities = ["str", "dex", "con", "int", "wis", "cha"];
+    abilities.forEach((ability) => {
+      const option = document.createElement("option");
+      option.value = ability;
+      option.textContent = ability.toUpperCase();
+      spellAbilitySelect.appendChild(option);
+    });
+    if ((_a = existingClass == null ? void 0 : existingClass.spellcasting) == null ? void 0 : _a.ability) {
+      spellAbilitySelect.value = existingClass.spellcasting.ability;
+    }
+    spellAbilityContainer.appendChild(spellAbilitySelect);
+    const prepareSpellsContainer = spellOptionsContainer.createDiv("prepare-spells-container");
+    const prepareSpellsCheck = document.createElement("input");
+    prepareSpellsCheck.type = "checkbox";
+    prepareSpellsCheck.id = "prepare-spells";
+    prepareSpellsCheck.checked = ((_b = existingClass == null ? void 0 : existingClass.spellcasting) == null ? void 0 : _b.prepareSpells) || false;
+    prepareSpellsContainer.appendChild(prepareSpellsCheck);
+    const prepareSpellsLabel = document.createElement("label");
+    prepareSpellsLabel.textContent = " Prepares spells from a list (like wizard, cleric)";
+    prepareSpellsLabel.htmlFor = "prepare-spells";
+    prepareSpellsLabel.style.marginLeft = "5px";
+    prepareSpellsContainer.appendChild(prepareSpellsLabel);
+    spellcasterCheck.addEventListener("change", () => {
+      spellOptionsContainer.style.display = spellcasterCheck.checked ? "block" : "none";
+    });
+  }
+  /**
+   * Render Proficiencies Tab
+   */
+  renderProficienciesTab(container, existingClass) {
+    container.createEl("h3", { text: "Proficiencies" });
+    container.createEl("p", {
+      text: "Define what equipment this class is proficient with.",
+      cls: "setting-item-description"
+    });
+    const weaponsContainer = container.createDiv("weapons-container");
+    weaponsContainer.createEl("h4", { text: "Weapon Proficiencies" });
+    const addWeaponProf = (value) => {
+      const weaponInput = document.createElement("input");
+      weaponInput.type = "text";
+      weaponInput.name = "weapon-prof";
+      weaponInput.placeholder = "e.g., Simple weapons, Martial weapons";
+      weaponInput.value = value || "";
+      weaponInput.style.width = "100%";
+      weaponInput.style.marginBottom = "5px";
+      weaponsContainer.appendChild(weaponInput);
+    };
+    if ((existingClass == null ? void 0 : existingClass.proficiencies.weapons) && existingClass.proficiencies.weapons.length > 0) {
+      existingClass.proficiencies.weapons.forEach((weapon) => {
+        addWeaponProf(weapon);
+      });
+    } else {
+      addWeaponProf();
+    }
+    const addWeaponButton = weaponsContainer.createEl("button", { text: "Add Weapon Proficiency" });
+    addWeaponButton.style.fontSize = "0.8em";
+    addWeaponButton.style.marginBottom = "15px";
+    addWeaponButton.addEventListener("click", () => {
+      addWeaponProf();
+    });
+    const armorContainer = container.createDiv("armor-container");
+    armorContainer.createEl("h4", { text: "Armor Proficiencies" });
+    const addArmorProf = (value) => {
+      const armorInput = document.createElement("input");
+      armorInput.type = "text";
+      armorInput.name = "armor-prof";
+      armorInput.placeholder = "e.g., Light armor, Medium armor, Shields";
+      armorInput.value = value || "";
+      armorInput.style.width = "100%";
+      armorInput.style.marginBottom = "5px";
+      armorContainer.appendChild(armorInput);
+    };
+    if ((existingClass == null ? void 0 : existingClass.proficiencies.armor) && existingClass.proficiencies.armor.length > 0) {
+      existingClass.proficiencies.armor.forEach((armor) => {
+        addArmorProf(armor);
+      });
+    } else {
+      addArmorProf();
+    }
+    const addArmorButton = armorContainer.createEl("button", { text: "Add Armor Proficiency" });
+    addArmorButton.style.fontSize = "0.8em";
+    addArmorButton.style.marginBottom = "15px";
+    addArmorButton.addEventListener("click", () => {
+      addArmorProf();
+    });
+    const toolsContainer = container.createDiv("tools-container");
+    toolsContainer.createEl("h4", { text: "Tool Proficiencies" });
+    const addToolProf = (value) => {
+      const toolInput = document.createElement("input");
+      toolInput.type = "text";
+      toolInput.name = "tool-prof";
+      toolInput.placeholder = "e.g., Thieves' tools, Musical instruments";
+      toolInput.value = value || "";
+      toolInput.style.width = "100%";
+      toolInput.style.marginBottom = "5px";
+      toolsContainer.appendChild(toolInput);
+    };
+    if ((existingClass == null ? void 0 : existingClass.proficiencies.tools) && existingClass.proficiencies.tools.length > 0) {
+      existingClass.proficiencies.tools.forEach((tool) => {
+        addToolProf(tool);
+      });
+    } else {
+      addToolProf();
+    }
+    const addToolButton = toolsContainer.createEl("button", { text: "Add Tool Proficiency" });
+    addToolButton.style.fontSize = "0.8em";
+    addToolButton.style.marginBottom = "15px";
+    addToolButton.addEventListener("click", () => {
+      addToolProf();
+    });
   }
   /**
    * Open Custom Parameter Modal for Adding/Editing
@@ -1273,9 +2181,10 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       placeholder: "Internal parameter name (lowercase, no spaces)",
       value: (existingParam == null ? void 0 : existingParam.name) || ""
     });
+    nameInput.style.width = "100%";
     nameContainer.createEl("div", {
       attr: {
-        style: "color: red; display: none;",
+        style: "color: var(--text-error); display: none; margin-top: 5px; font-size: 0.9em;",
         id: "name-error"
       }
     });
@@ -1311,6 +2220,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       placeholder: "Label to display in UI",
       value: (existingParam == null ? void 0 : existingParam.label) || ""
     });
+    labelInput.style.width = "100%";
     const formatContainer = modal.contentEl.createDiv("parameter-format");
     formatContainer.createEl("h3", { text: "Formatting" });
     const formatInput = formatContainer.createEl("input", {
@@ -1318,15 +2228,16 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       placeholder: 'Format template (e.g., "- {content}")',
       value: (existingParam == null ? void 0 : existingParam.format) || '- "{content}"'
     });
+    formatInput.style.width = "100%";
     formatContainer.createEl("p", {
       text: "Use {content} for single values or {item} for list items",
-      attr: { style: "color: #666; font-size: 0.8em;" }
+      attr: { style: "color: var(--text-muted); font-size: 0.9em; margin-top: 5px;" }
     });
     const previewContainer = modal.contentEl.createDiv("parameter-preview");
     previewContainer.createEl("h3", { text: "Preview" });
     const previewOutput = previewContainer.createEl("div", {
       attr: {
-        style: "background: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace;"
+        style: "background: var(--background-secondary); padding: 10px; border-radius: 4px; font-family: var(--font-monospace); margin-top: 5px;"
       }
     });
     const updatePreview = () => {
@@ -1345,7 +2256,19 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       text: " Enabled (visible in NPC generation)",
       attr: { style: "margin-left: 10px;" }
     });
-    const saveButton = modal.contentEl.createEl("button", { text: "Save" });
+    const buttonContainer = modal.contentEl.createDiv("button-container");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "20px";
+    buttonContainer.style.gap = "10px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.addEventListener("click", () => {
+      modal.close();
+    });
+    const saveButton = buttonContainer.createEl("button", {
+      text: "Save Parameter",
+      cls: "mod-cta"
+    });
     saveButton.addEventListener("click", async () => {
       if (!validateName()) return;
       const paramToSave = {
@@ -1364,11 +2287,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       this.display();
       modal.close();
     });
-    const cancelButton = modal.contentEl.createEl("button", {
-      text: "Cancel",
-      attr: { style: "margin-left: 10px;" }
-    });
-    cancelButton.addEventListener("click", () => modal.close());
     modal.open();
   }
   /**
@@ -1376,14 +2294,13 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    */
   formatRaceDescription(race) {
     const bonuses = Object.entries(race.abilityScoreAdjustments).filter(([_, value]) => value !== 0).map(([ability, value]) => `${ability.toUpperCase()} ${value > 0 ? "+" + value : value}`).join(", ");
-    const traits = race.traits.length ? race.traits.join(", ") : "None";
-    return `Ability Adjustments: ${bonuses || "None"}, Traits: ${traits}`;
+    return `${bonuses || "No ability adjustments"}`;
   }
   /**
    * Format class description for display
    */
   formatClassDescription(characterClass) {
-    return `Hit Die: d${characterClass.hitDie}, Primary: ${characterClass.primaryAbility.toUpperCase()}, Skills: ${characterClass.skills.length}`;
+    return `d${characterClass.hitDie} \u2022 ${characterClass.primaryAbility.toUpperCase()} \u2022 ${characterClass.skills.length} skills`;
   }
 };
 
