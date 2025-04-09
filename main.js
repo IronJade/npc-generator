@@ -818,9 +818,24 @@ var NPCGeneratorModal = class extends import_obsidian.Modal {
     statblockText.style.width = "100%";
     statblockText.style.height = "300px";
     statblockText.style.fontFamily = "monospace";
-    const insertButton = contentEl.createEl("button", { text: "Insert into Current Note" });
+    const buttonContainer = contentEl.createDiv("npc-buttons");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "space-between";
+    buttonContainer.style.marginTop = "20px";
+    const regenerateButton = buttonContainer.createEl("button", { text: "Regenerate NPC" });
+    regenerateButton.addEventListener("click", () => {
+      const options = {
+        level: this.npc.level,
+        race: this.npc.race,
+        class: this.npc.class,
+        alignment: this.npc.alignment
+      };
+      this.npc = this.plugin.generateNPC(options);
+      this.showResults();
+    });
+    const insertButton = buttonContainer.createEl("button", { text: "Insert into Current Note" });
     insertButton.addEventListener("click", this.insertStatblockIntoNote.bind(this));
-    const backButton = contentEl.createEl("button", { text: "Generate Another NPC" });
+    const backButton = buttonContainer.createEl("button", { text: "Generate Another NPC" });
     backButton.addEventListener("click", () => this.onOpen());
   }
   /**
@@ -1290,6 +1305,7 @@ var NPCGenerator = class extends import_obsidian3.Plugin {
     });
   }
   async loadSettings() {
+    var _a, _b;
     const defaultSettings = {
       races: [
         {
@@ -1968,7 +1984,13 @@ var NPCGenerator = class extends import_obsidian3.Plugin {
       customParameters: [],
       statblockFormat: "fantasyStatblock"
     };
-    this.settings = Object.assign({}, defaultSettings, await this.loadData());
+    const savedData = await this.loadData();
+    this.settings = {
+      races: ((_a = savedData == null ? void 0 : savedData.races) == null ? void 0 : _a.length) > 5 ? savedData.races : defaultSettings.races,
+      classes: ((_b = savedData == null ? void 0 : savedData.classes) == null ? void 0 : _b.length) > 5 ? savedData.classes : defaultSettings.classes,
+      customParameters: (savedData == null ? void 0 : savedData.customParameters) || [],
+      statblockFormat: (savedData == null ? void 0 : savedData.statblockFormat) || "fantasyStatblock"
+    };
   }
   async saveSettings() {
     await this.saveData(this.settings);
