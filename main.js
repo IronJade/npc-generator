@@ -1634,44 +1634,72 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   openClassModal(existingClass, index) {
     const modal = new import_obsidian2.Modal(this.app);
     modal.titleEl.setText(existingClass ? `Edit ${existingClass.name} Class` : "Add New Class");
-    modal.contentEl.style.width = "800px";
-    modal.contentEl.style.maxWidth = "80vw";
-    modal.contentEl.style.height = "80vh";
-    modal.contentEl.style.maxHeight = "800px";
-    modal.contentEl.style.display = "flex";
-    modal.contentEl.style.flexDirection = "column";
-    const scrollContainer = modal.contentEl.createDiv("scroll-container");
-    scrollContainer.style.overflowY = "auto";
-    scrollContainer.style.overflowX = "hidden";
-    scrollContainer.style.flex = "1";
-    scrollContainer.style.padding = "0 20px";
-    const basicInfoContainer = scrollContainer.createDiv("basic-class-info");
-    basicInfoContainer.style.marginBottom = "20px";
-    basicInfoContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
-    basicInfoContainer.style.paddingBottom = "15px";
-    new import_obsidian2.Setting(basicInfoContainer).setName("Class Name").addText((text) => {
-      text.setValue((existingClass == null ? void 0 : existingClass.name) || "").setPlaceholder("Class name").onChange((value) => {
+    modal.contentEl.style.width = "100%";
+    modal.contentEl.style.maxWidth = "1000px";
+    modal.contentEl.style.margin = "0 auto";
+    modal.contentEl.style.padding = "0 20px";
+    modal.contentEl.style.boxSizing = "border-box";
+    const modalScrollContainer = modal.contentEl.createDiv("modal-scroll-container");
+    modalScrollContainer.style.maxHeight = "80vh";
+    modalScrollContainer.style.overflowY = "auto";
+    modalScrollContainer.style.overflowX = "hidden";
+    const basicRow = modalScrollContainer.createDiv("basic-class-info-row");
+    basicRow.style.display = "flex";
+    basicRow.style.flexWrap = "wrap";
+    basicRow.style.gap = "10px";
+    basicRow.style.marginBottom = "20px";
+    const nameContainer = basicRow.createDiv("class-name-container");
+    nameContainer.style.flex = "1";
+    nameContainer.style.minWidth = "200px";
+    const formContainer = modal.contentEl.createDiv("class-form-container");
+    formContainer.style.display = "grid";
+    formContainer.style.gap = "15px";
+    new import_obsidian2.Setting(nameContainer).setName("Class Name").addText((text) => {
+      text.setValue((existingClass == null ? void 0 : existingClass.name) || "").setPlaceholder("Enter class name").onChange((value) => {
         if (existingClass) existingClass.name = value;
       });
+      text.inputEl.style.width = "100%";
     });
-    const basicRow = basicInfoContainer.createDiv("basic-row");
-    basicRow.style.display = "flex";
-    basicRow.style.gap = "20px";
-    const hitDieContainer = basicRow.createDiv("hit-die-container");
-    hitDieContainer.style.flex = "1";
+    const detailsContainer = formContainer.createDiv("class-details-container");
+    detailsContainer.style.display = "grid";
+    detailsContainer.style.gridTemplateColumns = "1fr 1fr";
+    detailsContainer.style.gap = "15px";
+    const hitDieContainer = detailsContainer.createDiv("hit-die-container");
     new import_obsidian2.Setting(hitDieContainer).setName("Hit Die").addDropdown((dropdown) => {
       dropdown.addOption("6", "d6").addOption("8", "d8").addOption("10", "d10").addOption("12", "d12").setValue(((existingClass == null ? void 0 : existingClass.hitDie) || 8).toString()).onChange((value) => {
         if (existingClass) existingClass.hitDie = parseInt(value);
       });
     });
-    const abilityContainer = basicRow.createDiv("ability-container");
-    abilityContainer.style.flex = "1";
+    const abilityContainer = detailsContainer.createDiv("ability-container");
     new import_obsidian2.Setting(abilityContainer).setName("Primary Ability").addDropdown((dropdown) => {
       dropdown.addOption("str", "STR").addOption("dex", "DEX").addOption("con", "CON").addOption("int", "INT").addOption("wis", "WIS").addOption("cha", "CHA").setValue((existingClass == null ? void 0 : existingClass.primaryAbility) || "str").onChange((value) => {
         if (existingClass) existingClass.primaryAbility = value;
       });
     });
-    const classTabsContainer = scrollContainer.createDiv("class-tabs");
+    const spellcastingContainer = formContainer.createDiv("spellcasting-container");
+    const spellcasterCheck = spellcastingContainer.createEl("div", { cls: "setting-item" });
+    spellcasterCheck.style.display = "flex";
+    spellcasterCheck.style.justifyContent = "space-between";
+    spellcasterCheck.style.alignItems = "center";
+    const spellcasterLabel = spellcasterCheck.createEl("label", { text: "Spellcasting" });
+    spellcasterLabel.style.fontWeight = "normal";
+    const checkboxContainer = spellcasterCheck.createEl("div");
+    const checkbox = checkboxContainer.createEl("input", { type: "checkbox" });
+    checkbox.checked = !!(existingClass == null ? void 0 : existingClass.spellcasting);
+    checkbox.addEventListener("change", () => {
+      if (existingClass) {
+        if (checkbox.checked) {
+          existingClass.spellcasting = {
+            ability: "int",
+            // default
+            prepareSpells: false
+          };
+        } else {
+          delete existingClass.spellcasting;
+        }
+      }
+    });
+    const classTabsContainer = modalScrollContainer.createDiv("class-tabs");
     classTabsContainer.style.display = "flex";
     classTabsContainer.style.flexWrap = "wrap";
     classTabsContainer.style.gap = "5px";
@@ -1679,7 +1707,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     classTabsContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
     classTabsContainer.style.paddingBottom = "10px";
     let activeClassTab = "saves";
-    const classTabContent = scrollContainer.createDiv("class-tab-content");
+    const classTabContent = modalScrollContainer.createDiv("class-tab-content");
     classTabContent.style.padding = "15px 0";
     classTabContent.style.minHeight = "300px";
     const showClassTab = (tabId) => {
@@ -1706,9 +1734,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
           break;
         case "features":
           this.renderFeaturesTab(classTabContent, existingClass);
-          break;
-        case "spellcasting":
-          this.renderSpellcastingTab(classTabContent, existingClass);
           break;
         case "proficiencies":
           this.renderProficienciesTab(classTabContent, existingClass);
@@ -1737,7 +1762,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     createClassTab("saves", "Saving Throws");
     createClassTab("skills", "Skills");
     createClassTab("features", "Features");
-    createClassTab("spellcasting", "Spellcasting");
     createClassTab("proficiencies", "Proficiencies");
     showClassTab("saves");
     const buttonContainer = modal.contentEl.createDiv("button-container");
@@ -1758,7 +1782,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     });
     saveButton.style.minWidth = "120px";
     saveButton.addEventListener("click", async () => {
-      const nameInput = basicInfoContainer.querySelector('input[placeholder="Class name"]');
+      const nameInput = nameContainer.querySelector('input[placeholder="Class name"]');
       if (!nameInput || !nameInput.value.trim()) {
         new import_obsidian2.Notice("Class name is required");
         return;
@@ -1782,8 +1806,8 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       existingClass.savingThrows = [];
       const abilities = ["str", "dex", "con", "int", "wis", "cha"];
       abilities.forEach((ability) => {
-        const checkbox = scrollContainer.querySelector(`#save-${ability}`);
-        if (checkbox && checkbox.checked) {
+        const checkbox2 = modalScrollContainer.querySelector(`#save-${ability}`);
+        if (checkbox2 && checkbox2.checked) {
           existingClass.savingThrows.push(ability);
         }
       });
@@ -1809,17 +1833,17 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         "Survival"
       ];
       allSkills.forEach((skill) => {
-        const checkbox = scrollContainer.querySelector(`#skill-${skill}`);
-        if (checkbox && checkbox.checked) {
+        const checkbox2 = modalScrollContainer.querySelector(`#skill-${skill}`);
+        if (checkbox2 && checkbox2.checked) {
           existingClass.skills.push(skill);
         }
       });
-      const skillChoicesInput = scrollContainer.querySelector("#skill-choices");
+      const skillChoicesInput = modalScrollContainer.querySelector("#skill-choices");
       if (skillChoicesInput) {
         existingClass.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
       }
       existingClass.features = [];
-      const featureRows = scrollContainer.querySelectorAll(".feature-row");
+      const featureRows = modalScrollContainer.querySelectorAll(".feature-row");
       featureRows.forEach((row) => {
         const inputs = row.querySelectorAll("input");
         if (inputs.length >= 3 && inputs[1].value.trim()) {
@@ -1831,30 +1855,30 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         }
       });
       existingClass.proficiencies.weapons = [];
-      const weaponsInputs = scrollContainer.querySelectorAll('input[name="weapon-prof"]');
+      const weaponsInputs = modalScrollContainer.querySelectorAll('input[name="weapon-prof"]');
       weaponsInputs.forEach((input) => {
         if (input.value.trim()) {
           existingClass.proficiencies.weapons.push(input.value.trim());
         }
       });
       existingClass.proficiencies.armor = [];
-      const armorInputs = scrollContainer.querySelectorAll('input[name="armor-prof"]');
+      const armorInputs = modalScrollContainer.querySelectorAll('input[name="armor-prof"]');
       armorInputs.forEach((input) => {
         if (input.value.trim()) {
           existingClass.proficiencies.armor.push(input.value.trim());
         }
       });
       existingClass.proficiencies.tools = [];
-      const toolInputs = scrollContainer.querySelectorAll('input[name="tool-prof"]');
+      const toolInputs = modalScrollContainer.querySelectorAll('input[name="tool-prof"]');
       toolInputs.forEach((input) => {
         if (input.value.trim()) {
           existingClass.proficiencies.tools.push(input.value.trim());
         }
       });
-      const isSpellcaster = scrollContainer.querySelector("#is-spellcaster");
+      const isSpellcaster = modalScrollContainer.querySelector("#is-spellcaster");
       if (isSpellcaster && isSpellcaster.checked) {
-        const spellAbility = scrollContainer.querySelector("#spell-ability");
-        const prepareSpells = scrollContainer.querySelector("#prepare-spells");
+        const spellAbility = modalScrollContainer.querySelector("#spell-ability");
+        const prepareSpells = modalScrollContainer.querySelector("#prepare-spells");
         existingClass.spellcasting = {
           ability: spellAbility.value,
           prepareSpells: prepareSpells.checked
@@ -2025,61 +2049,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     addFeatureButton.style.marginTop = "10px";
     addFeatureButton.addEventListener("click", () => {
       addFeatureRow();
-    });
-  }
-  /**
-   * Render Spellcasting Tab
-   */
-  renderSpellcastingTab(container, existingClass) {
-    var _a, _b;
-    container.createEl("h3", { text: "Spellcasting" });
-    const spellcasterContainer = container.createDiv("spellcaster-toggle");
-    spellcasterContainer.style.marginBottom = "15px";
-    const spellcasterCheck = document.createElement("input");
-    spellcasterCheck.type = "checkbox";
-    spellcasterCheck.id = "is-spellcaster";
-    spellcasterCheck.checked = (existingClass == null ? void 0 : existingClass.spellcasting) !== void 0;
-    spellcasterContainer.appendChild(spellcasterCheck);
-    const spellcasterLabel = document.createElement("label");
-    spellcasterLabel.textContent = " This class can cast spells";
-    spellcasterLabel.htmlFor = "is-spellcaster";
-    spellcasterLabel.style.marginLeft = "5px";
-    spellcasterContainer.appendChild(spellcasterLabel);
-    const spellOptionsContainer = container.createDiv("spell-options");
-    spellOptionsContainer.style.display = (existingClass == null ? void 0 : existingClass.spellcasting) ? "block" : "none";
-    const spellAbilityContainer = spellOptionsContainer.createDiv("spell-ability-container");
-    spellAbilityContainer.style.marginBottom = "10px";
-    spellAbilityContainer.createEl("label", {
-      text: "Spellcasting Ability: ",
-      attr: { for: "spell-ability" }
-    });
-    const spellAbilitySelect = document.createElement("select");
-    spellAbilitySelect.id = "spell-ability";
-    spellAbilitySelect.style.marginLeft = "10px";
-    const abilities = ["str", "dex", "con", "int", "wis", "cha"];
-    abilities.forEach((ability) => {
-      const option = document.createElement("option");
-      option.value = ability;
-      option.textContent = ability.toUpperCase();
-      spellAbilitySelect.appendChild(option);
-    });
-    if ((_a = existingClass == null ? void 0 : existingClass.spellcasting) == null ? void 0 : _a.ability) {
-      spellAbilitySelect.value = existingClass.spellcasting.ability;
-    }
-    spellAbilityContainer.appendChild(spellAbilitySelect);
-    const prepareSpellsContainer = spellOptionsContainer.createDiv("prepare-spells-container");
-    const prepareSpellsCheck = document.createElement("input");
-    prepareSpellsCheck.type = "checkbox";
-    prepareSpellsCheck.id = "prepare-spells";
-    prepareSpellsCheck.checked = ((_b = existingClass == null ? void 0 : existingClass.spellcasting) == null ? void 0 : _b.prepareSpells) || false;
-    prepareSpellsContainer.appendChild(prepareSpellsCheck);
-    const prepareSpellsLabel = document.createElement("label");
-    prepareSpellsLabel.textContent = " Prepares spells from a list (like wizard, cleric)";
-    prepareSpellsLabel.htmlFor = "prepare-spells";
-    prepareSpellsLabel.style.marginLeft = "5px";
-    prepareSpellsContainer.appendChild(prepareSpellsLabel);
-    spellcasterCheck.addEventListener("change", () => {
-      spellOptionsContainer.style.display = spellcasterCheck.checked ? "block" : "none";
     });
   }
   /**

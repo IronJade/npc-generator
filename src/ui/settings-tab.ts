@@ -906,87 +906,120 @@ private openSubclassModal(
     /**
      * Open Class Modal for Adding/Editing
      */
-    private openClassModal(existingClass?: CharacterClass, index?: number) {
+    openClassModal(existingClass?: CharacterClass, index?: number) {
         const modal = new Modal(this.app);
         modal.titleEl.setText(existingClass ? `Edit ${existingClass.name} Class` : 'Add New Class');
         
-        // Increase modal width and set max height with scrolling
-        modal.contentEl.style.width = '800px';           // Wider modal
-        modal.contentEl.style.maxWidth = '80vw';         // Responsive width
-        modal.contentEl.style.height = '80vh';           // Set fixed height
-        modal.contentEl.style.maxHeight = '800px';       // Maximum height
-        modal.contentEl.style.display = 'flex';
-        modal.contentEl.style.flexDirection = 'column';
+        // Ensure full width and proper responsiveness
+        modal.contentEl.style.width = '100%';
+        modal.contentEl.style.maxWidth = '1000px';  // Increased max-width
+        modal.contentEl.style.margin = '0 auto';    // Center the modal
+        modal.contentEl.style.padding = '0 20px';   // Add some side padding
+        modal.contentEl.style.boxSizing = 'border-box';
         
-        // Create a scrollable container for all content
-        const scrollContainer = modal.contentEl.createDiv('scroll-container');
-        scrollContainer.style.overflowY = 'auto';
-        scrollContainer.style.overflowX = 'hidden';
-        scrollContainer.style.flex = '1';
-        scrollContainer.style.padding = '0 20px';
+        // Create a scrollable container
+        const modalScrollContainer = modal.contentEl.createDiv('modal-scroll-container');
+        modalScrollContainer.style.maxHeight = '80vh';
+        modalScrollContainer.style.overflowY = 'auto';
+        modalScrollContainer.style.overflowX = 'hidden';
         
-        // Basic class info at the top (outside tabs)
-        const basicInfoContainer = scrollContainer.createDiv('basic-class-info');
-        basicInfoContainer.style.marginBottom = '20px';
-        basicInfoContainer.style.borderBottom = '1px solid var(--background-modifier-border)';
-        basicInfoContainer.style.paddingBottom = '15px';
-        
-        // Class Name
-        new Setting(basicInfoContainer)
-            .setName('Class Name')
-            .addText(text => {
-                text.setValue(existingClass?.name || '')
-                    .setPlaceholder('Class name')
-                    .onChange(value => {
-                        if (existingClass) existingClass.name = value;
-                    });
-            });
-    
-        // Hit Die and Primary Ability in a row
-        const basicRow = basicInfoContainer.createDiv('basic-row');
+        // Basic info row with flexible layout
+        const basicRow = modalScrollContainer.createDiv('basic-class-info-row');
         basicRow.style.display = 'flex';
-        basicRow.style.gap = '20px';
+        basicRow.style.flexWrap = 'wrap';
+        basicRow.style.gap = '10px';
+        basicRow.style.marginBottom = '20px';
         
-        // Hit Die
-        const hitDieContainer = basicRow.createDiv('hit-die-container');
-        hitDieContainer.style.flex = '1';
+        // Class Name input
+        const nameContainer = basicRow.createDiv('class-name-container');
+        nameContainer.style.flex = '1';
+        nameContainer.style.minWidth = '200px';
         
-        new Setting(hitDieContainer)
-            .setName('Hit Die')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('6', 'd6')
-                    .addOption('8', 'd8')
-                    .addOption('10', 'd10')
-                    .addOption('12', 'd12')
-                    .setValue((existingClass?.hitDie || 8).toString())
-                    .onChange(value => {
-                        if (existingClass) existingClass.hitDie = parseInt(value) as 6 | 8 | 10 | 12;
-                    });
-            });
-    
-        // Primary Ability
-        const abilityContainer = basicRow.createDiv('ability-container');
-        abilityContainer.style.flex = '1';
+        // Class Hit Die and Primary Ability in a row
+        const formContainer = modal.contentEl.createDiv('class-form-container');
+        formContainer.style.display = 'grid';
+        formContainer.style.gap = '15px';
         
-        new Setting(abilityContainer)
-            .setName('Primary Ability')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('str', 'STR')
-                    .addOption('dex', 'DEX')
-                    .addOption('con', 'CON')
-                    .addOption('int', 'INT')
-                    .addOption('wis', 'WIS')
-                    .addOption('cha', 'CHA')
-                    .setValue(existingClass?.primaryAbility || 'str')
-                    .onChange(value => {
-                        if (existingClass) existingClass.primaryAbility = value as AbilityName;
-                    });
-            });
+        new Setting(nameContainer)
+        .setName('Class Name')
+        .addText(text => {
+            text.setValue(existingClass?.name || '')
+                .setPlaceholder('Enter class name')
+                .onChange(value => {
+                    if (existingClass) existingClass.name = value;
+                });
+            text.inputEl.style.width = '100%';
+        });
+        
+    // Hit Die and Primary Ability in a row
+    const detailsContainer = formContainer.createDiv('class-details-container');
+    detailsContainer.style.display = 'grid';
+    detailsContainer.style.gridTemplateColumns = '1fr 1fr';
+    detailsContainer.style.gap = '15px';
+        
+    // Hit Die
+    const hitDieContainer = detailsContainer.createDiv('hit-die-container');
+    new Setting(hitDieContainer)
+        .setName('Hit Die')
+        .addDropdown(dropdown => {
+            dropdown
+                .addOption('6', 'd6')
+                .addOption('8', 'd8')
+                .addOption('10', 'd10')
+                .addOption('12', 'd12')
+                .setValue(((existingClass?.hitDie) || 8).toString())
+                .onChange(value => {
+                    if (existingClass) existingClass.hitDie = parseInt(value) as 6 | 8 | 10 | 12;
+                });
+        });
+
+    // Primary Ability
+    const abilityContainer = detailsContainer.createDiv('ability-container');
+    new Setting(abilityContainer)
+        .setName('Primary Ability')
+        .addDropdown(dropdown => {
+            dropdown
+                .addOption('str', 'STR')
+                .addOption('dex', 'DEX')
+                .addOption('con', 'CON')
+                .addOption('int', 'INT')
+                .addOption('wis', 'WIS')
+                .addOption('cha', 'CHA')
+                .setValue(existingClass?.primaryAbility || 'str')
+                .onChange(value => {
+                    if (existingClass) existingClass.primaryAbility = value as AbilityName;
+                });
+        });
+
+    // Spellcasting
+    const spellcastingContainer = formContainer.createDiv('spellcasting-container');
+    const spellcasterCheck = spellcastingContainer.createEl('div', { cls: 'setting-item' });
+    spellcasterCheck.style.display = 'flex';
+    spellcasterCheck.style.justifyContent = 'space-between';
+    spellcasterCheck.style.alignItems = 'center';
+
+    const spellcasterLabel = spellcasterCheck.createEl('label', { text: 'Spellcasting' });
+    spellcasterLabel.style.fontWeight = 'normal';
+
+    const checkboxContainer = spellcasterCheck.createEl('div');
+    const checkbox = checkboxContainer.createEl('input', { type: 'checkbox' });
+    checkbox.checked = !!existingClass?.spellcasting;
+    checkbox.addEventListener('change', () => {
+        if (existingClass) {
+            if (checkbox.checked) {
+                existingClass.spellcasting = {
+                    ability: 'int', // default
+                    prepareSpells: false
+                };
+            } else {
+                delete existingClass.spellcasting;
+            }
+        }
+    });
+
     
         // Create tabs for class properties
-        const classTabsContainer = scrollContainer.createDiv('class-tabs');
+        const classTabsContainer = modalScrollContainer.createDiv('class-tabs');
         classTabsContainer.style.display = 'flex';
         classTabsContainer.style.flexWrap = 'wrap';
         classTabsContainer.style.gap = '5px';
@@ -997,7 +1030,7 @@ private openSubclassModal(
         let activeClassTab = 'saves';
         
         // Tab content container
-        const classTabContent = scrollContainer.createDiv('class-tab-content');
+        const classTabContent = modalScrollContainer.createDiv('class-tab-content');
         classTabContent.style.padding = '15px 0';
         classTabContent.style.minHeight = '300px';
         
@@ -1030,9 +1063,6 @@ private openSubclassModal(
                     break;
                 case 'features':
                     this.renderFeaturesTab(classTabContent, existingClass);
-                    break;
-                case 'spellcasting':
-                    this.renderSpellcastingTab(classTabContent, existingClass);
                     break;
                 case 'proficiencies':
                     this.renderProficienciesTab(classTabContent, existingClass);
@@ -1067,7 +1097,6 @@ private openSubclassModal(
         createClassTab('saves', 'Saving Throws');
         createClassTab('skills', 'Skills');
         createClassTab('features', 'Features');
-        createClassTab('spellcasting', 'Spellcasting');
         createClassTab('proficiencies', 'Proficiencies');
         
         // Show initial tab
@@ -1096,7 +1125,7 @@ private openSubclassModal(
         
         saveButton.addEventListener('click', async () => {
             // Get class name
-            const nameInput = basicInfoContainer.querySelector('input[placeholder="Class name"]') as HTMLInputElement;
+            const nameInput = nameContainer.querySelector('input[placeholder="Class name"]') as HTMLInputElement;
             if (!nameInput || !nameInput.value.trim()) {
                 new Notice('Class name is required');
                 return;
@@ -1124,7 +1153,7 @@ private openSubclassModal(
             existingClass.savingThrows = [];
             const abilities: AbilityName[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
             abilities.forEach(ability => {
-                const checkbox = scrollContainer.querySelector(`#save-${ability}`) as HTMLInputElement;
+                const checkbox = modalScrollContainer.querySelector(`#save-${ability}`) as HTMLInputElement;
                 if (checkbox && checkbox.checked) {
                     existingClass!.savingThrows.push(ability);
                 }
@@ -1139,21 +1168,21 @@ private openSubclassModal(
                 'Sleight of Hand', 'Stealth', 'Survival'
             ];
             allSkills.forEach(skill => {
-                const checkbox = scrollContainer.querySelector(`#skill-${skill}`) as HTMLInputElement;
+                const checkbox = modalScrollContainer.querySelector(`#skill-${skill}`) as HTMLInputElement;
                 if (checkbox && checkbox.checked) {
                     existingClass!.skills.push(skill);
                 }
             });
             
             // Skill choices
-            const skillChoicesInput = scrollContainer.querySelector('#skill-choices') as HTMLInputElement;
+            const skillChoicesInput = modalScrollContainer.querySelector('#skill-choices') as HTMLInputElement;
             if (skillChoicesInput) {
                 existingClass.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
             }
             
             // Update features
             existingClass.features = [];
-            const featureRows = scrollContainer.querySelectorAll('.feature-row');
+            const featureRows = modalScrollContainer.querySelectorAll('.feature-row');
             featureRows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
                 if (inputs.length >= 3 && inputs[1].value.trim()) {
@@ -1167,7 +1196,7 @@ private openSubclassModal(
             
             // Update proficiencies
             existingClass.proficiencies.weapons = [];
-            const weaponsInputs = scrollContainer.querySelectorAll('input[name="weapon-prof"]');
+            const weaponsInputs = modalScrollContainer.querySelectorAll('input[name="weapon-prof"]');
             weaponsInputs.forEach(input => {
                 if ((input as HTMLInputElement).value.trim()) {
                     existingClass!.proficiencies.weapons.push((input as HTMLInputElement).value.trim());
@@ -1175,7 +1204,7 @@ private openSubclassModal(
             });
             
             existingClass.proficiencies.armor = [];
-            const armorInputs = scrollContainer.querySelectorAll('input[name="armor-prof"]');
+            const armorInputs = modalScrollContainer.querySelectorAll('input[name="armor-prof"]');
             armorInputs.forEach(input => {
                 if ((input as HTMLInputElement).value.trim()) {
                     existingClass!.proficiencies.armor.push((input as HTMLInputElement).value.trim());
@@ -1183,7 +1212,7 @@ private openSubclassModal(
             });
             
             existingClass.proficiencies.tools = [];
-            const toolInputs = scrollContainer.querySelectorAll('input[name="tool-prof"]');
+            const toolInputs = modalScrollContainer.querySelectorAll('input[name="tool-prof"]');
             toolInputs.forEach(input => {
                 if ((input as HTMLInputElement).value.trim()) {
                     existingClass!.proficiencies.tools.push((input as HTMLInputElement).value.trim());
@@ -1191,10 +1220,10 @@ private openSubclassModal(
             });
             
             // Update spellcasting
-            const isSpellcaster = scrollContainer.querySelector('#is-spellcaster') as HTMLInputElement;
+            const isSpellcaster = modalScrollContainer.querySelector('#is-spellcaster') as HTMLInputElement;
             if (isSpellcaster && isSpellcaster.checked) {
-                const spellAbility = scrollContainer.querySelector('#spell-ability') as HTMLSelectElement;
-                const prepareSpells = scrollContainer.querySelector('#prepare-spells') as HTMLInputElement;
+                const spellAbility = modalScrollContainer.querySelector('#spell-ability') as HTMLSelectElement;
+                const prepareSpells = modalScrollContainer.querySelector('#prepare-spells') as HTMLInputElement;
                 
                 existingClass.spellcasting = {
                     ability: spellAbility.value as AbilityName,
@@ -1387,80 +1416,6 @@ private openSubclassModal(
         addFeatureButton.style.marginTop = '10px';
         addFeatureButton.addEventListener('click', () => {
             addFeatureRow();
-        });
-    }
-
-    /**
-     * Render Spellcasting Tab
-     */
-    private renderSpellcastingTab(container: HTMLElement, existingClass?: CharacterClass) {
-        container.createEl('h3', { text: 'Spellcasting' });
-        
-        // Is spellcaster toggle
-        const spellcasterContainer = container.createDiv('spellcaster-toggle');
-        spellcasterContainer.style.marginBottom = '15px';
-        
-        const spellcasterCheck = document.createElement('input');
-        spellcasterCheck.type = 'checkbox';
-        spellcasterCheck.id = 'is-spellcaster';
-        spellcasterCheck.checked = existingClass?.spellcasting !== undefined;
-        spellcasterContainer.appendChild(spellcasterCheck);
-        
-        const spellcasterLabel = document.createElement('label');
-        spellcasterLabel.textContent = ' This class can cast spells';
-        spellcasterLabel.htmlFor = 'is-spellcaster';
-        spellcasterLabel.style.marginLeft = '5px';
-        spellcasterContainer.appendChild(spellcasterLabel);
-        
-        // Spellcasting options (hidden if not a spellcaster)
-        const spellOptionsContainer = container.createDiv('spell-options');
-        spellOptionsContainer.style.display = existingClass?.spellcasting ? 'block' : 'none';
-        
-        // Spellcasting ability
-        const spellAbilityContainer = spellOptionsContainer.createDiv('spell-ability-container');
-        spellAbilityContainer.style.marginBottom = '10px';
-        
-        spellAbilityContainer.createEl('label', { 
-            text: 'Spellcasting Ability: ',
-            attr: { for: 'spell-ability' }
-        });
-        
-        const spellAbilitySelect = document.createElement('select');
-        spellAbilitySelect.id = 'spell-ability';
-        spellAbilitySelect.style.marginLeft = '10px';
-        
-        const abilities: AbilityName[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-        abilities.forEach(ability => {
-            const option = document.createElement('option');
-            option.value = ability;
-            option.textContent = ability.toUpperCase();
-            spellAbilitySelect.appendChild(option);
-        });
-        
-        if (existingClass?.spellcasting?.ability) {
-            spellAbilitySelect.value = existingClass.spellcasting.ability;
-        }
-        
-        spellAbilityContainer.appendChild(spellAbilitySelect);
-        
-        // Prepares spells toggle
-        const prepareSpellsContainer = spellOptionsContainer.createDiv('prepare-spells-container');
-        
-        const prepareSpellsCheck = document.createElement('input');
-        prepareSpellsCheck.type = 'checkbox';
-        prepareSpellsCheck.id = 'prepare-spells';
-        prepareSpellsCheck.checked = existingClass?.spellcasting?.prepareSpells || false;
-        prepareSpellsContainer.appendChild(prepareSpellsCheck);
-        
-        const prepareSpellsLabel = document.createElement('label');
-        prepareSpellsLabel.textContent = ' Prepares spells from a list (like wizard, cleric)';
-        prepareSpellsLabel.htmlFor = 'prepare-spells';
-        prepareSpellsLabel.style.marginLeft = '5px';
-        prepareSpellsContainer.appendChild(prepareSpellsLabel);
-        
-        // Toggle spellcasting options visibility
-        spellcasterCheck.addEventListener('change', () => {
-            spellOptionsContainer.style.display = spellcasterCheck.checked ? 'block' : 'none';
         });
     }
 
