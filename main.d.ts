@@ -33,10 +33,25 @@ export default class NPCGenerator extends Plugin {
      * @returns Formatted Fantasy Statblock string
      */
     private formatFantasyStatblock;
+    private getSubclassFeatures;
+    /**
+     * Format possessions for statblock
+     */
+    private formatPossessions;
     /**
      * Format NPC using Basic Text format
      * @param npc NPC to format
      * @returns Formatted Basic Text string
      */
     private formatBasicStatblock;
+    /**
+     * Get ordinal suffix for a number
+     * @param n Number to format
+     * @returns Number with ordinal suffix
+     */
+    private getOrdinal;
+    /**
+    * Get description for racial traits
+    */
+    private getTraitDescription;
 }

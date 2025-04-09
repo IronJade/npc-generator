@@ -53,6 +53,34 @@ export class NPCGeneratorModal extends Modal {
         );
         const classSelect = classContainer.querySelector('select') as HTMLSelectElement;
         
+        // Subclass selection
+        const subclassContainer = this.createLabeledSelect(
+            optionsContainer, 
+            'Subclass',
+            ['None'] // Default option
+        );
+        const subclassSelect = subclassContainer.querySelector('select') as HTMLSelectElement;
+        
+        // Update subclass options when class changes
+        classSelect.addEventListener('change', () => {
+            const selectedClass = this.plugin.settings.classes.find(c => c.name === classSelect.value);
+            
+            // Clear existing options except "None"
+            while (subclassSelect.options.length > 1) {
+                subclassSelect.remove(1);
+            }
+            
+            // Add subclass options if available
+            if (selectedClass?.subclasses) {
+                selectedClass.subclasses.forEach(subclass => {
+                    subclassSelect.add(new Option(subclass.name, subclass.name));
+                });
+            }
+        });
+        
+        // Trigger the change event to initialize subclass options
+        classSelect.dispatchEvent(new Event('change'));
+        
         // Alignment selection
         const alignments: Alignment[] = [
             'Lawful Good', 'Neutral Good', 'Chaotic Good',

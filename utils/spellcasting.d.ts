@@ -27,6 +27,24 @@ export declare class SpellcastingUtils {
      */
     static generateSpellcasting(characterClass: CharacterClass, abilityModifiers: Partial<Record<AbilityName, number>>, level: number): Spellcasting | null;
     /**
+     * Calculate spell slots for full casters
+     * @param level Character level
+     * @param slots Slots object to populate
+     */
+    private static calculateFullCasterSlots;
+    /**
+     * Calculate spell slots for half casters
+     * @param level Character level
+     * @param slots Slots object to populate
+     */
+    private static calculateHalfCasterSlots;
+    /**
+     * Calculate spell slots for warlocks
+     * @param level Character level
+     * @param slots Slots object to populate
+     */
+    private static calculateWarlockSlots;
+    /**
      * Get spells for a given class and spell level
      * @param className Class name
      * @param spellLevel Spell level

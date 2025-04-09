@@ -3,7 +3,7 @@ import {
     AbilityScores, 
     CharacterClass, 
     Race, 
-    Alignment
+    Alignment 
 } from '../types';
 
 export class NPCGenerationUtils {
@@ -78,6 +78,14 @@ export class NPCGenerationUtils {
                 first: ['Aerith', 'Legolas', 'Elrond', 'Galadriel', 'Thranduil', 'Arwen', 'Celeborn', 'Tauriel', 'Haldir', 'Fëanor'],
                 last: ['Silverleaf', 'Starweaver', 'Moonshadow', 'Windrider', 'Dawnbringer', 'Nightwalker', 'Sunseeker', 'Forestborn', 'Lightbringer', 'Swiftarrow']
             },
+            'Dwarf': {
+                first: ['Thorin', 'Gimli', 'Balin', 'Dwalin', 'Gloin', 'Bombur', 'Dori', 'Nori', 'Ori', 'Fili'],
+                last: ['Ironforge', 'Stonebeard', 'Rockfist', 'Deepdelver', 'Goldseeker', 'Anvilheart', 'Hammerstrike', 'Mithrilsoul', 'Copperfury', 'Flintcrag']
+            },
+            'Halfling': {
+                first: ['Bilbo', 'Frodo', 'Sam', 'Merry', 'Pippin', 'Rosie', 'Elanor', 'Hamfast', 'Adelard', 'Esmeralda'],
+                last: ['Baggins', 'Gamgee', 'Took', 'Brandybuck', 'Proudfoot', 'Bolger', 'Smallburrow', 'Chubb', 'Goodbody', 'Boffin']
+            }
             // Add other races similarly...
         };
 
@@ -177,25 +185,35 @@ export class NPCGenerationUtils {
         const proficiencyBonus = this.calculateProficiencyBonus(level);
         const skills: Record<string, number> = {};
         
-        // Get class skills
-        const classSkills = characterClass.skills;
-        const numProficiencies = 2 + Math.floor(Math.random() * 3); // 2-4 proficiencies
+        // Initialize all skills with their base values
+        for (const [skill, ability] of Object.entries(allSkills)) {
+            skills[skill] = abilityModifiers[ability] || 0;
+        }
+        
+        // Determine number of proficiencies (from class)
+        const numProficiencies = characterClass.skillChoices || 2;
+        
+        // Select random proficiencies from class skill list
+        const availableSkills = [...characterClass.skills];
         const proficientSkills: string[] = [];
         
-        // Select random proficiencies from class skills
-        while (proficientSkills.length < numProficiencies && classSkills.length > proficientSkills.length) {
-            const skill = classSkills[Math.floor(Math.random() * classSkills.length)];
+        // Randomly select proficiencies until we reach the limit
+        while (proficientSkills.length < numProficiencies && availableSkills.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableSkills.length);
+            const skill = availableSkills.splice(randomIndex, 1)[0];
+            
             if (!proficientSkills.includes(skill)) {
                 proficientSkills.push(skill);
             }
         }
         
-        // Calculate skill bonuses
-        for (const [skill, ability] of Object.entries(allSkills)) {
-            const isProficient = proficientSkills.includes(skill);
-            skills[skill] = (abilityModifiers[ability] || 0) + (isProficient ? proficiencyBonus : 0);
+        // Apply proficiency bonus to selected skills
+        for (const skill of proficientSkills) {
+            skills[skill] += proficiencyBonus;
         }
         
         return skills;
     }
+
+    
 }

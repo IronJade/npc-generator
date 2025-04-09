@@ -16,6 +16,10 @@ export interface Race {
     name: string;
     abilityScoreAdjustments: Partial<AbilityScores>;
     traits: string[];
+    size: "Tiny" | "Small" | "Medium" | "Large" | "Huge" | "Gargantuan";
+    speed: number;
+    languages: string[];
+    additionalLanguages?: number;
 }
 
 // Class Interface
@@ -25,6 +29,32 @@ export interface CharacterClass {
     primaryAbility: AbilityName;
     savingThrows: AbilityName[];
     skills: string[];
+    skillChoices: number;
+    proficiencies: {
+        weapons: string[];
+        armor: string[];
+        tools: string[];
+    };
+    subclasses?: {
+        name: string;
+        description: string;
+        features: {
+            level: number;
+            name: string;
+            description: string;
+        }[];
+    }[];
+    features: {
+        level: number;
+        name: string;
+        description: string;
+    }[];
+    spellcasting?: {
+        ability: AbilityName;
+        cantripsKnown?: number[];  // By level
+        spellsKnown?: number[];   // By level for some classes
+        prepareSpells?: boolean;  // For classes that prepare spells
+    };
 }
 
 // Custom Parameter Interface
@@ -84,6 +114,7 @@ export interface NPC {
     level: number;
     race: string;
     class: string;
+    subclass?: string;
     alignment: Alignment;
     abilityScores: AbilityScores;
     abilityModifiers: Partial<AbilityScores>;
@@ -111,6 +142,7 @@ export interface NPCGenerationOptions {
     level?: number;
     race?: string;
     class?: string;
+    subclass?: string;
     alignment?: Alignment;
     customParameters?: Record<string, any>;
 }
