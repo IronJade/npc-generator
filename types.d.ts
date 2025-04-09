@@ -1,7 +1,4 @@
-// Ability Score Types
 export type AbilityName = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
-
-// Ability Scores Interface
 export interface AbilityScores {
     str: number;
     dex: number;
@@ -10,15 +7,11 @@ export interface AbilityScores {
     wis: number;
     cha: number;
 }
-
-// Race Interface
 export interface Race {
     name: string;
     abilityScoreAdjustments: Partial<AbilityScores>;
     traits: string[];
 }
-
-// Class Interface
 export interface CharacterClass {
     name: string;
     hitDie: 6 | 8 | 10 | 12;
@@ -26,16 +19,12 @@ export interface CharacterClass {
     savingThrows: AbilityName[];
     skills: string[];
 }
-
-// Custom Parameter Interface
 export interface CustomParameter {
     name: string;
     label: string;
     enabled: boolean;
     format: string;
 }
-
-// Spellcasting Interface
 export interface Spellcasting {
     ability: string;
     saveDC: number;
@@ -43,27 +32,12 @@ export interface Spellcasting {
     cantripsKnown: number;
     slots: Record<number, number>;
 }
-
-// Possible Alignments
-export type Alignment = 
-    | 'Lawful Good' 
-    | 'Neutral Good' 
-    | 'Chaotic Good'
-    | 'Lawful Neutral' 
-    | 'Neutral' 
-    | 'Chaotic Neutral'
-    | 'Lawful Evil' 
-    | 'Neutral Evil' 
-    | 'Chaotic Evil';
-
-// Trait Interface
+export type Alignment = 'Lawful Good' | 'Neutral Good' | 'Chaotic Good' | 'Lawful Neutral' | 'Neutral' | 'Chaotic Neutral' | 'Lawful Evil' | 'Neutral Evil' | 'Chaotic Evil';
 export interface Trait {
     name: string;
     desc: string;
     attack_bonus: number;
 }
-
-// Action Interface
 export interface Action {
     name: string;
     desc: string;
@@ -71,14 +45,10 @@ export interface Action {
     damage_dice?: string;
     damage_bonus?: number;
 }
-
-// Possession Interface
 export interface Possession {
     name: string;
     desc?: string;
 }
-
-// NPC Interface
 export interface NPC {
     name: string;
     level: number;
@@ -97,16 +67,12 @@ export interface NPC {
         [key: string]: any;
     };
 }
-
-// Plugin Settings Interface
 export interface NPCGeneratorSettings {
     races: Race[];
     classes: CharacterClass[];
     customParameters: CustomParameter[];
     statblockFormat: 'fantasyStatblock' | 'basic';
 }
-
-// NPC Generation Options
 export interface NPCGenerationOptions {
     level?: number;
     race?: string;

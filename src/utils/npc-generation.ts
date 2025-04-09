@@ -3,8 +3,7 @@ import {
     AbilityScores, 
     CharacterClass, 
     Race, 
-    Alignment, 
-    NPC 
+    Alignment
 } from '../types';
 
 export class NPCGenerationUtils {

@@ -1,5 +1,4 @@
 // Minimal type definitions for Obsidian core interfaces
-import { NPC } from './types';
 
 export interface App {
     workspace: Workspace;

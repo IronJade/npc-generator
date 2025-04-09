@@ -1,12 +1,11 @@
-import { Plugin, MarkdownView } from 'obsidian';
+import { Plugin } from 'obsidian';
 
 import { 
     NPCGeneratorSettings, 
     NPC, 
     NPCGenerationOptions, 
     CharacterClass, 
-    Race,
-    Alignment 
+    Race
 } from './types';
 
 import { NPCGenerationUtils } from './utils/npc-generation';
@@ -16,7 +15,7 @@ import { NPCGeneratorModal } from './ui/modal';
 import { NPCGeneratorSettingsTab } from './ui/settings-tab';
 
 export default class NPCGenerator extends Plugin {
-    settings: NPCGeneratorSettings;
+    settings: NPCGeneratorSettings = {} as NPCGeneratorSettings;
 
     async onload() {
         // Load settings
@@ -111,7 +110,7 @@ export default class NPCGenerator extends Plugin {
         // Calculate hit points
         const hitPoints = NPCGenerationUtils.calculateHitPoints(
             characterClass, 
-            abilityModifiers.con || 0, 
+            abilityModifiers.con ?? 0, 
             mergedOptions.level!
         );
 
@@ -209,7 +208,7 @@ name: ${npc.name}
 size: Medium
 type: humanoid
 alignment: ${npc.alignment}
-ac: ${10 + (npc.abilityModifiers.dex || 0)}
+ac: ${10 + (npc.abilityModifiers.dex ?? 0)}
 hp: ${npc.hitPoints}
 hit_dice: ${npc.level}d${this.settings.classes.find(c => c.name === npc.class)?.hitDie || 8}
 speed: 30 ft.
@@ -219,7 +218,7 @@ ${Object.entries(npc.skills).filter(([_, value]) => value !== 0).map(([skill, bo
 `  "${skill}": ${bonus >= 0 ? '+' + bonus : bonus}`).join('\n')}
 damage_resistances: 
 condition_immunities: 
-senses: passive Perception ${10 + (npc.skills['Perception'] || 0)}
+senses: passive Perception ${10 + (npc.skills['Perception'] ?? 0)}
 languages: Common
 cr: ${Math.max(1, Math.floor(npc.level / 4))}
 ---
@@ -227,17 +226,17 @@ cr: ${Math.max(1, Math.floor(npc.level / 4))}
 # ${npc.name}
 *Level ${npc.level} ${npc.race} ${npc.class}, ${npc.alignment}*
 
-**Armor Class** ${10 + (npc.abilityModifiers.dex || 0)}
-**Hit Points** ${npc.hitPoints} (${npc.level}d${this.settings.classes.find(c => c.name === npc.class)?.hitDie || 8} + ${npc.level * (npc.abilityModifiers.con || 0)})
+**Armor Class** ${10 + (npc.abilityModifiers.dex ?? 0)}
+**Hit Points** ${npc.hitPoints} (${npc.level}d${this.settings.classes.find(c => c.name === npc.class)?.hitDie || 8} + ${npc.level * (npc.abilityModifiers.con ?? 0)})
 **Speed** 30 ft.
 
 |STR|DEX|CON|INT|WIS|CHA|
 |:---:|:---:|:---:|:---:|:---:|:---:|
-|${npc.abilityScores.str} (${npc.abilityModifiers.str >= 0 ? '+' + npc.abilityModifiers.str : npc.abilityModifiers.str})|${npc.abilityScores.dex} (${npc.abilityModifiers.dex >= 0 ? '+' + npc.abilityModifiers.dex : npc.abilityModifiers.dex})|${npc.abilityScores.con} (${npc.abilityModifiers.con >= 0 ? '+' + npc.abilityModifiers.con : npc.abilityModifiers.con})|${npc.abilityScores.int} (${npc.abilityModifiers.int >= 0 ? '+' + npc.abilityModifiers.int : npc.abilityModifiers.int})|${npc.abilityScores.wis} (${npc.abilityModifiers.wis >= 0 ? '+' + npc.abilityModifiers.wis : npc.abilityModifiers.wis})|${npc.abilityScores.cha} (${npc.abilityModifiers.cha >= 0 ? '+' + npc.abilityModifiers.cha : npc.abilityModifiers.cha})|
+|${npc.abilityScores.str} (${(npc.abilityModifiers.str ?? 0) >= 0 ? '+' + (npc.abilityModifiers.str ?? 0) : npc.abilityModifiers.str ?? 0})|${npc.abilityScores.dex} (${(npc.abilityModifiers.dex ?? 0) >= 0 ? '+' + (npc.abilityModifiers.dex ?? 0) : npc.abilityModifiers.dex ?? 0})|${npc.abilityScores.con} (${(npc.abilityModifiers.con ?? 0) >= 0 ? '+' + (npc.abilityModifiers.con ?? 0) : npc.abilityModifiers.con ?? 0})|${npc.abilityScores.int} (${(npc.abilityModifiers.int ?? 0) >= 0 ? '+' + (npc.abilityModifiers.int ?? 0) : npc.abilityModifiers.int ?? 0})|${npc.abilityScores.wis} (${(npc.abilityModifiers.wis ?? 0) >= 0 ? '+' + (npc.abilityModifiers.wis ?? 0) : npc.abilityModifiers.wis ?? 0})|${npc.abilityScores.cha} (${(npc.abilityModifiers.cha ?? 0) >= 0 ? '+' + (npc.abilityModifiers.cha ?? 0) : npc.abilityModifiers.cha ?? 0})|
 
 **Skills** ${Object.entries(npc.skills).filter(([_, value]) => value !== 0).map(([skill, bonus]) => 
 `${skill} ${bonus >= 0 ? '+' + bonus : bonus}`).join(', ')}
-**Senses** passive Perception ${10 + (npc.skills['Perception'] || 0)}
+**Senses** passive Perception ${10 + (npc.skills['Perception'] ?? 0)}
 **Languages** Common
 **Challenge** ${Math.max(1, Math.floor(npc.level / 4))} (${Math.max(200, npc.level * 50)} XP)
 **Proficiency Bonus** +${npc.proficiencyBonus}
@@ -266,16 +265,16 @@ ${PossessionsUtils.formatPossessions(npc.possessions).map(item => `* ${item}`).j
 Level ${npc.level} ${npc.race} ${npc.class} (${npc.alignment})
 
 **Ability Scores**
-- STR: ${npc.abilityScores.str} (${npc.abilityModifiers.str >= 0 ? '+' + npc.abilityModifiers.str : npc.abilityModifiers.str})
-- DEX: ${npc.abilityScores.dex} (${npc.abilityModifiers.dex >= 0 ? '+' + npc.abilityModifiers.dex : npc.abilityModifiers.dex})
-- CON: ${npc.abilityScores.con} (${npc.abilityModifiers.con >= 0 ? '+' + npc.abilityModifiers.con : npc.abilityModifiers.con})
-- INT: ${npc.abilityScores.int} (${npc.abilityModifiers.int >= 0 ? '+' + npc.abilityModifiers.int : npc.abilityModifiers.int})
-- WIS: ${npc.abilityScores.wis} (${npc.abilityModifiers.wis >= 0 ? '+' + npc.abilityModifiers.wis : npc.abilityModifiers.wis})
-- CHA: ${npc.abilityScores.cha} (${npc.abilityModifiers.cha >= 0 ? '+' + npc.abilityModifiers.cha : npc.abilityModifiers.cha})
+- STR: ${npc.abilityScores.str} (${(npc.abilityModifiers.str ?? 0) >= 0 ? '+' + (npc.abilityModifiers.str ?? 0) : npc.abilityModifiers.str ?? 0})
+- DEX: ${npc.abilityScores.dex} (${(npc.abilityModifiers.dex ?? 0) >= 0 ? '+' + (npc.abilityModifiers.dex ?? 0) : npc.abilityModifiers.dex ?? 0})
+- CON: ${npc.abilityScores.con} (${(npc.abilityModifiers.con ?? 0) >= 0 ? '+' + (npc.abilityModifiers.con ?? 0) : npc.abilityModifiers.con ?? 0})
+- INT: ${npc.abilityScores.int} (${(npc.abilityModifiers.int ?? 0) >= 0 ? '+' + (npc.abilityModifiers.int ?? 0) : npc.abilityModifiers.int ?? 0})
+- WIS: ${npc.abilityScores.wis} (${(npc.abilityModifiers.wis ?? 0) >= 0 ? '+' + (npc.abilityModifiers.wis ?? 0) : npc.abilityModifiers.wis ?? 0})
+- CHA: ${npc.abilityScores.cha} (${(npc.abilityModifiers.cha ?? 0) >= 0 ? '+' + (npc.abilityModifiers.cha ?? 0) : npc.abilityModifiers.cha ?? 0})
 
 **Core Stats**
 - HP: ${npc.hitPoints}
-- AC: ${10 + (npc.abilityModifiers.dex || 0)}
+- AC: ${10 + (npc.abilityModifiers.dex ?? 0)}
 - Proficiency: +${npc.proficiencyBonus}
 
 **Skills**

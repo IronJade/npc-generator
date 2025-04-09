@@ -1,9 +1,11 @@
 import { 
+    App,
     PluginSettingTab, 
     Setting, 
     Modal, 
     Notice 
 } from 'obsidian';
+
 import NPCGenerator from '../main';
 import { 
     Race, 
@@ -56,7 +58,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                     .addOption('basic', 'Basic Text')
                     .setValue(this.plugin.settings.statblockFormat)
                     .onChange(async (value) => {
-                        this.plugin.settings.statblockFormat = value;
+                        this.plugin.settings.statblockFormat = value as "fantasyStatblock" | "basic";
                         await this.plugin.saveSettings();
                     });
             });
@@ -81,7 +83,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
 
         // Existing Races List
         this.plugin.settings.races.forEach((race, index) => {
-            const raceSetting = new Setting(racesSection)
+            new Setting(racesSection)
                 .setName(race.name)
                 .setDesc(this.formatRaceDescription(race))
                 .addButton(button => {
@@ -92,7 +94,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 .addButton(button => {
                     return button
                         .setButtonText('Delete')
-                        .setWarning(true)
+                        .setClass("warning")
                         .onClick(async () => {
                             if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
                                 this.plugin.settings.races.splice(index, 1);
@@ -123,7 +125,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
 
         // Existing Classes List
         this.plugin.settings.classes.forEach((characterClass, index) => {
-            const classSetting = new Setting(classesSection)
+            new Setting(classesSection)
                 .setName(characterClass.name)
                 .setDesc(this.formatClassDescription(characterClass))
                 .addButton(button => {
@@ -134,7 +136,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 .addButton(button => {
                     return button
                         .setButtonText('Delete')
-                        .setWarning(true)
+                        .setClass("warning")
                         .onClick(async () => {
                             if (confirm(`Are you sure you want to delete the ${characterClass.name} class?`)) {
                                 this.plugin.settings.classes.splice(index, 1);
@@ -176,8 +178,8 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 attr: { style: 'color: #666; font-style: italic; text-align: center;' }
             });
         } else {
-            customParams.forEach((param, index) => {
-                const paramSetting = new Setting(customParamsSection)
+            customParams.forEach((param) => {
+                new Setting(customParamsSection)
                     .setName(param.label)
                     .setDesc(`Name: ${param.name}, Format: ${param.format}`)
                     .addToggle(toggle => {
@@ -191,12 +193,12 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                     .addButton(button => {
                         return button
                             .setButtonText('Edit')
-                            .onClick(() => this.openCustomParameterModal(param, index));
+                            .onClick(() => this.openCustomParameterModal(param));
                     })
                     .addButton(button => {
                         return button
                             .setButtonText('Delete')
-                            .setWarning(true)
+                            .setClass("warning")
                             .onClick(async () => {
                                 if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
                                     this.plugin.settings.customParameters.splice(
@@ -383,10 +385,10 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
             const setting = new Setting(savingThrowsContainer)
                 .setName(ability.toUpperCase());
             
-            const checkbox = setting.controlEl.createEl('input', {
-                type: 'checkbox',
-                checked: existingClass?.savingThrows.includes(ability) || false
-            });
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = existingClass?.savingThrows.includes(ability) || false;
+            setting.controlEl.appendChild(checkbox);
             savingThrowCheckboxes[ability] = checkbox;
         });
 
@@ -407,10 +409,10 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
             const setting = new Setting(skillsContainer)
                 .setName(skill);
             
-            const checkbox = setting.controlEl.createEl('input', {
-                type: 'checkbox',
-                checked: existingClass?.skills.includes(skill) || false
-            });
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = existingClass?.skills.includes(skill) || false;
+            setting.controlEl.appendChild(checkbox);
             skillCheckboxes[skill] = checkbox;
         });
 
@@ -451,7 +453,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
     /**
      * Open Custom Parameter Modal for Adding/Editing
      */
-    private openCustomParameterModal(existingParam?: CustomParameter, index?: number) {
+    private openCustomParameterModal(existingParam?: CustomParameter) {
         const modal = new Modal(this.app);
         modal.titleEl.setText(existingParam ? `Edit ${existingParam.label} Parameter` : 'Add New Custom Parameter');
 
@@ -465,7 +467,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
             value: existingParam?.name || ''
         });
         
-        const nameError = nameContainer.createEl('div', {
+        nameContainer.createEl('div', {
             attr: { 
                 style: 'color: red; display: none;',
                 id: 'name-error' 
@@ -475,7 +477,9 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
         // Validate parameter name
         const validateName = (): boolean => {
             const name = nameInput.value.trim().toLowerCase();
-            const nameErrorEl = document.getElementById('name-error')!;
+            const nameErrorEl = document.getElementById('name-error');
+            
+            if (!nameErrorEl) return false;
             
             // Check if name is empty
             if (!name) {
@@ -561,10 +565,11 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
         const enabledContainer = modal.contentEl.createDiv('parameter-enabled');
         enabledContainer.createEl('h3', { text: 'Visibility' });
         
-        const enabledToggle = enabledContainer.createEl('input', {
-            type: 'checkbox',
-            checked: existingParam?.enabled ?? true
-        });
+        const enabledToggle = document.createElement('input');
+        enabledToggle.type = 'checkbox';
+        enabledToggle.checked = existingParam?.enabled ?? true;
+        enabledContainer.appendChild(enabledToggle);
+        
         enabledContainer.createEl('label', { 
             text: ' Enabled (visible in NPC generation)',
             attr: { style: 'margin-left: 10px;' }
@@ -631,4 +636,3 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
         return `Hit Die: d${characterClass.hitDie}, Primary: ${characterClass.primaryAbility.toUpperCase()}, Skills: ${characterClass.skills.length}`;
     }
 }
-            

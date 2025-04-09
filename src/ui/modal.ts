@@ -1,5 +1,5 @@
 import { Modal, App, Notice, MarkdownView } from 'obsidian';
-import NPCGenerator from '../main';
+import type NPCGenerator from '../main';
 import { 
     NPCGenerationOptions, 
     NPC, 
@@ -83,7 +83,7 @@ export class NPCGeneratorModal extends Modal {
                 // Skip built-in parameters
                 if (['spellcasting', 'possessions'].includes(param.name)) return;
                 
-                const paramContainer = this.createLabeledInput(
+                this.createLabeledInput(
                     customParamsContainer, 
                     param.label, 
                     'text', 
@@ -163,7 +163,7 @@ export class NPCGeneratorModal extends Modal {
         const inputContainer = container.createDiv('labeled-input');
         inputContainer.createEl('label', { text: label });
         
-        const input = inputContainer.createEl('input', {
+        inputContainer.createEl('input', {
             type, 
             value: defaultValue,
             ...additionalAttributes
