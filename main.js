@@ -979,6 +979,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     this.plugin = plugin;
   }
   display() {
+    this.containerEl.innerHTML = "";
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h1", { text: "NPC Generator Settings" });
@@ -1102,7 +1103,8 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
           this.plugin.settings.races.splice(index, 1);
           await this.plugin.saveSettings();
-          this.display();
+          contentEl.empty();
+          this.addRacesSection(contentEl);
         }
       });
     });
@@ -1215,7 +1217,8 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
             if (confirm(`Are you sure you want to delete the ${subclass.name} subclass?`)) {
               (_a = characterClass.subclasses) == null ? void 0 : _a.splice(subclassIndex, 1);
               await this.plugin.saveSettings();
-              this.display();
+              contentEl.empty();
+              this.addClassesSection(contentEl);
             }
           });
         });
@@ -1242,7 +1245,8 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         if (confirm(`Are you sure you want to delete the ${characterClass.name} class?`)) {
           this.plugin.settings.classes.splice(index, 1);
           await this.plugin.saveSettings();
-          this.display();
+          contentEl.empty();
+          this.addClassesSection(contentEl);
         }
       });
       classHeader.addEventListener("click", () => {
@@ -1256,6 +1260,10 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    * Add Custom Parameters Management Section
    */
   addCustomParametersSection(contentEl) {
+    const existingSection = contentEl.querySelector(".custom-parameters-section");
+    if (existingSection) {
+      existingSection.remove();
+    }
     const customParamsSection = contentEl.createDiv("custom-parameters-section");
     const headerContainer = customParamsSection.createDiv("section-header");
     headerContainer.createEl("h2", { text: "Custom Parameters" });
@@ -1330,13 +1338,23 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         deleteButton.style.fontSize = "0.8em";
         deleteButton.style.color = "var(--text-error)";
         deleteButton.addEventListener("click", async () => {
+          console.log("Delete button clicked", {
+            paramToDelete: param,
+            currentParams: this.plugin.settings.customParameters
+          });
           if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
-            this.plugin.settings.customParameters.splice(
-              this.plugin.settings.customParameters.indexOf(param),
-              1
-            );
-            await this.plugin.saveSettings();
-            this.display();
+            console.log("Deletion confirmed");
+            try {
+              const paramIndex = this.plugin.settings.customParameters.indexOf(param);
+              console.log("Parameter index", paramIndex);
+              this.plugin.settings.customParameters.splice(paramIndex, 1);
+              await this.plugin.saveSettings();
+              console.log("Settings saved after deletion");
+              contentEl.empty();
+              this.addCustomParametersSection(contentEl);
+            } catch (error) {
+              console.error("Error during parameter deletion", error);
+            }
           }
         });
       });
@@ -2140,10 +2158,14 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    * Open Custom Parameter Modal for Adding/Editing
    */
   openCustomParameterModal(existingParam) {
-    var _a;
     const modal = new import_obsidian2.Modal(this.app);
     modal.titleEl.setText(existingParam ? `Edit ${existingParam.label} Parameter` : "Add New Custom Parameter");
-    const nameContainer = modal.contentEl.createDiv("parameter-name");
+    modal.containerEl.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+    }, false);
+    modal.contentEl.addClass("npc-generator-parameter-modal");
+    const inputContainer = modal.contentEl.createDiv("parameter-input-container");
+    const nameContainer = inputContainer.createDiv("parameter-name");
     nameContainer.createEl("h3", { text: "Parameter Identification" });
     const nameInput = nameContainer.createEl("input", {
       type: "text",
@@ -2151,38 +2173,10 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       value: (existingParam == null ? void 0 : existingParam.name) || ""
     });
     nameInput.style.width = "100%";
-    nameContainer.createEl("div", {
-      attr: {
-        style: "color: var(--text-error); display: none; margin-top: 5px; font-size: 0.9em;",
-        id: "name-error"
-      }
+    nameInput.addEventListener("input", () => {
+      nameInput.value = nameInput.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
     });
-    const validateName = () => {
-      const name = nameInput.value.trim().toLowerCase();
-      const nameErrorEl = document.getElementById("name-error");
-      if (!nameErrorEl) return false;
-      if (!name) {
-        nameErrorEl.textContent = "Parameter name is required";
-        nameErrorEl.style.display = "block";
-        return false;
-      }
-      const validNameRegex = /^[a-z0-9_]+$/;
-      if (!validNameRegex.test(name)) {
-        nameErrorEl.textContent = "Name must contain only lowercase letters, numbers, and underscores";
-        nameErrorEl.style.display = "block";
-        return false;
-      }
-      const existingNames = this.plugin.settings.customParameters.filter((p) => p !== existingParam).map((p) => p.name);
-      if (existingNames.includes(name)) {
-        nameErrorEl.textContent = "Parameter name must be unique";
-        nameErrorEl.style.display = "block";
-        return false;
-      }
-      nameErrorEl.style.display = "none";
-      return true;
-    };
-    nameInput.addEventListener("blur", validateName);
-    const labelContainer = modal.contentEl.createDiv("parameter-label");
+    const labelContainer = inputContainer.createDiv("parameter-label");
     labelContainer.createEl("h3", { text: "Display Settings" });
     const labelInput = labelContainer.createEl("input", {
       type: "text",
@@ -2190,7 +2184,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       value: (existingParam == null ? void 0 : existingParam.label) || ""
     });
     labelInput.style.width = "100%";
-    const formatContainer = modal.contentEl.createDiv("parameter-format");
+    const formatContainer = inputContainer.createDiv("parameter-format");
     formatContainer.createEl("h3", { text: "Formatting" });
     const formatInput = formatContainer.createEl("input", {
       type: "text",
@@ -2198,33 +2192,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       value: (existingParam == null ? void 0 : existingParam.format) || '- "{content}"'
     });
     formatInput.style.width = "100%";
-    formatContainer.createEl("p", {
-      text: "Use {content} for single values or {item} for list items",
-      attr: { style: "color: var(--text-muted); font-size: 0.9em; margin-top: 5px;" }
-    });
-    const previewContainer = modal.contentEl.createDiv("parameter-preview");
-    previewContainer.createEl("h3", { text: "Preview" });
-    const previewOutput = previewContainer.createEl("div", {
-      attr: {
-        style: "background: var(--background-secondary); padding: 10px; border-radius: 4px; font-family: var(--font-monospace); margin-top: 5px;"
-      }
-    });
-    const updatePreview = () => {
-      const format = formatInput.value || '- "{content}"';
-      previewOutput.textContent = format.replace("{content}", "Example content").replace("{item}", "Example item");
-    };
-    formatInput.addEventListener("input", updatePreview);
-    updatePreview();
-    const enabledContainer = modal.contentEl.createDiv("parameter-enabled");
-    enabledContainer.createEl("h3", { text: "Visibility" });
-    const enabledToggle = document.createElement("input");
-    enabledToggle.type = "checkbox";
-    enabledToggle.checked = (_a = existingParam == null ? void 0 : existingParam.enabled) != null ? _a : true;
-    enabledContainer.appendChild(enabledToggle);
-    enabledContainer.createEl("label", {
-      text: " Enabled (visible in NPC generation)",
-      attr: { style: "margin-left: 10px;" }
-    });
     const buttonContainer = modal.contentEl.createDiv("button-container");
     buttonContainer.style.display = "flex";
     buttonContainer.style.justifyContent = "flex-end";
@@ -2239,12 +2206,15 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       cls: "mod-cta"
     });
     saveButton.addEventListener("click", async () => {
-      if (!validateName()) return;
+      var _a;
+      const name = nameInput.value.trim().toLowerCase();
+      const label = labelInput.value.trim() || "Custom Parameter";
+      const format = formatInput.value.trim() || '- "{content}"';
       const paramToSave = {
-        name: nameInput.value.trim().toLowerCase(),
-        label: labelInput.value.trim() || "Custom Parameter",
-        format: formatInput.value.trim() || '- "{content}"',
-        enabled: enabledToggle.checked
+        name,
+        label,
+        format,
+        enabled: true
       };
       if (existingParam) {
         const paramIndex = this.plugin.settings.customParameters.indexOf(existingParam);
@@ -2253,7 +2223,11 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         this.plugin.settings.customParameters.push(paramToSave);
       }
       await this.plugin.saveSettings();
-      this.display();
+      const contentEl = (_a = this.containerEl.querySelector(".custom-parameters-section")) == null ? void 0 : _a.closest("div");
+      if (contentEl) {
+        contentEl.empty();
+        this.addCustomParametersSection(contentEl);
+      }
       modal.close();
     });
     modal.open();

@@ -24,6 +24,10 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
     }
 
     display() {
+        // Clear any potential lingering event listeners
+        this.containerEl.innerHTML = '';
+
+        // Recreate the entire settings view
         const { containerEl } = this;
         containerEl.empty();
 
@@ -116,86 +120,89 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
             });
     }
 
-    /**
-     * Add Races Management Section
-     */
-    private addRacesSection(contentEl: HTMLElement) {
-        const racesSection = contentEl.createDiv('races-section');
+/**
+ * Add Races Management Section
+ */
+private addRacesSection(contentEl: HTMLElement) {
+    const racesSection = contentEl.createDiv('races-section');
+    
+    // Section header with description
+    const headerContainer = racesSection.createDiv('section-header');
+    headerContainer.createEl('h2', { text: 'Races' });
+    headerContainer.createEl('p', { 
+        text: 'Manage the available races for NPC generation.',
+        cls: 'setting-item-description'
+    });
+
+    // Add Race Button
+    new Setting(racesSection)
+        .setName('Add New Race')
+        .setDesc('Create a new playable race for NPC generation')
+        .addButton(button => {
+            return button
+                .setButtonText('Add Race')
+                .setCta()
+                .onClick(() => this.openRaceModal());
+        });
+
+    // Race cards container with grid layout
+    const racesContainer = racesSection.createDiv('races-container');
+    racesContainer.style.display = 'grid';
+    racesContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+    racesContainer.style.gap = '10px';
+    racesContainer.style.marginTop = '20px';
+
+    // Existing Races List as cards
+    this.plugin.settings.races.forEach((race, index) => {
+        const raceCard = racesContainer.createDiv('race-card');
+        raceCard.style.border = '1px solid var(--background-modifier-border)';
+        raceCard.style.borderRadius = '5px';
+        raceCard.style.padding = '10px';
+        raceCard.style.backgroundColor = 'var(--background-secondary)';
         
-        // Section header with description
-        const headerContainer = racesSection.createDiv('section-header');
-        headerContainer.createEl('h2', { text: 'Races' });
-        headerContainer.createEl('p', { 
-            text: 'Manage the available races for NPC generation.',
-            cls: 'setting-item-description'
+        const raceHeader = raceCard.createDiv('race-header');
+        raceHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
+        raceHeader.style.paddingBottom = '5px';
+        raceHeader.style.marginBottom = '8px';
+        
+        raceHeader.createEl('h3', { 
+            text: race.name,
+            attr: { style: 'margin: 0; font-size: 1.1em;' }
         });
-
-        // Add Race Button
-        new Setting(racesSection)
-            .setName('Add New Race')
-            .setDesc('Create a new playable race for NPC generation')
-            .addButton(button => {
-                return button
-                    .setButtonText('Add Race')
-                    .setCta()
-                    .onClick(() => this.openRaceModal());
-            });
-
-        // Race cards container with grid layout
-        const racesContainer = racesSection.createDiv('races-container');
-        racesContainer.style.display = 'grid';
-        racesContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
-        racesContainer.style.gap = '10px';
-        racesContainer.style.marginTop = '20px';
-
-        // Existing Races List as cards
-        this.plugin.settings.races.forEach((race, index) => {
-            const raceCard = racesContainer.createDiv('race-card');
-            raceCard.style.border = '1px solid var(--background-modifier-border)';
-            raceCard.style.borderRadius = '5px';
-            raceCard.style.padding = '10px';
-            raceCard.style.backgroundColor = 'var(--background-secondary)';
-            
-            const raceHeader = raceCard.createDiv('race-header');
-            raceHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
-            raceHeader.style.paddingBottom = '5px';
-            raceHeader.style.marginBottom = '8px';
-            
-            raceHeader.createEl('h3', { 
-                text: race.name,
-                attr: { style: 'margin: 0; font-size: 1.1em;' }
-            });
-            
-            const raceDescription = raceCard.createDiv('race-description');
-            raceDescription.style.fontSize = '0.9em';
-            raceDescription.style.marginBottom = '10px';
-            raceDescription.style.color = 'var(--text-muted)';
-            raceDescription.textContent = this.formatRaceDescription(race);
-            
-            const raceActions = raceCard.createDiv('race-actions');
-            raceActions.style.display = 'flex';
-            raceActions.style.justifyContent = 'space-between';
-            
-            const editButton = raceActions.createEl('button', { text: 'Edit' });
-            editButton.style.padding = '4px 8px';
-            editButton.style.fontSize = '0.8em';
-            editButton.addEventListener('click', () => {
-                this.openRaceModal(race, index);
-            });
-            
-            const deleteButton = raceActions.createEl('button', { text: 'Delete' });
-            deleteButton.style.padding = '4px 8px';
-            deleteButton.style.fontSize = '0.8em';
-            deleteButton.style.color = 'var(--text-error)';
-            deleteButton.addEventListener('click', async () => {
-                if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
-                    this.plugin.settings.races.splice(index, 1);
-                    await this.plugin.saveSettings();
-                    this.display();
-                }
-            });
+        
+        const raceDescription = raceCard.createDiv('race-description');
+        raceDescription.style.fontSize = '0.9em';
+        raceDescription.style.marginBottom = '10px';
+        raceDescription.style.color = 'var(--text-muted)';
+        raceDescription.textContent = this.formatRaceDescription(race);
+        
+        const raceActions = raceCard.createDiv('race-actions');
+        raceActions.style.display = 'flex';
+        raceActions.style.justifyContent = 'space-between';
+        
+        const editButton = raceActions.createEl('button', { text: 'Edit' });
+        editButton.style.padding = '4px 8px';
+        editButton.style.fontSize = '0.8em';
+        editButton.addEventListener('click', () => {
+            this.openRaceModal(race, index);
         });
-    }
+        
+        const deleteButton = raceActions.createEl('button', { text: 'Delete' });
+        deleteButton.style.padding = '4px 8px';
+        deleteButton.style.fontSize = '0.8em';
+        deleteButton.style.color = 'var(--text-error)';
+        deleteButton.addEventListener('click', async () => {
+            if (confirm(`Are you sure you want to delete the ${race.name} race?`)) {
+                this.plugin.settings.races.splice(index, 1);
+                await this.plugin.saveSettings();
+                
+                // Clear and recreate the section
+                contentEl.empty();
+                this.addRacesSection(contentEl);
+            }
+        });
+    });
+}
 
     /**
      * Add Classes Management Section
@@ -341,7 +348,10 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 if (confirm(`Are you sure you want to delete the ${subclass.name} subclass?`)) {
                     characterClass.subclasses?.splice(subclassIndex, 1);
                     await this.plugin.saveSettings();
-                    this.display();
+                
+                    // Clear and recreate the section
+                    contentEl.empty();
+                    this.addClassesSection(contentEl);
                 }
             });
         });
@@ -372,8 +382,11 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 if (confirm(`Are you sure you want to delete the ${characterClass.name} class?`)) {
                     this.plugin.settings.classes.splice(index, 1);
                     await this.plugin.saveSettings();
-                    this.display();
-                }
+                
+                // Clear and recreate the section
+                contentEl.empty();
+                this.addClassesSection(contentEl);
+            }
             });
             
             // Toggle expansion on header click
@@ -389,6 +402,12 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
      * Add Custom Parameters Management Section
      */
     private addCustomParametersSection(contentEl: HTMLElement) {
+        // Remove any existing content first
+        const existingSection = contentEl.querySelector('.custom-parameters-section');
+        if (existingSection) {
+            existingSection.remove();
+        }
+    
         const customParamsSection = contentEl.createDiv('custom-parameters-section');
         
         // Section header with description
@@ -398,7 +417,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
             text: 'Add custom fields to your NPC generation form and statblocks.',
             cls: 'setting-item-description'
         });
-
+    
         // Add Custom Parameter Button
         new Setting(customParamsSection)
             .setName('Add Custom Parameter')
@@ -409,17 +428,17 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                     .setCta()
                     .onClick(() => this.openCustomParameterModal());
             });
-
+    
         // Existing Custom Parameters List
         const customParams = this.plugin.settings.customParameters
             .filter(param => 
                 param.name !== 'spellcasting' && 
                 param.name !== 'possessions'
             );
-
+    
         const paramsContainer = customParamsSection.createDiv('params-container');
         paramsContainer.style.marginTop = '20px';
-
+    
         if (customParams.length === 0) {
             paramsContainer.createEl('p', { 
                 text: 'No custom parameters defined.',
@@ -498,13 +517,28 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 deleteButton.style.fontSize = '0.8em';
                 deleteButton.style.color = 'var(--text-error)';
                 deleteButton.addEventListener('click', async () => {
+                    console.log('Delete button clicked', { 
+                        paramToDelete: param,
+                        currentParams: this.plugin.settings.customParameters 
+                    });
+
                     if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
-                        this.plugin.settings.customParameters.splice(
-                            this.plugin.settings.customParameters.indexOf(param), 
-                            1
-                        );
-                        await this.plugin.saveSettings();
-                        this.display();
+                        console.log('Deletion confirmed');
+                        try {
+                            const paramIndex = this.plugin.settings.customParameters.indexOf(param);
+                            console.log('Parameter index', paramIndex);
+                
+                            this.plugin.settings.customParameters.splice(paramIndex, 1);
+                            
+                            await this.plugin.saveSettings();
+                            console.log('Settings saved after deletion');
+                            
+                            // Refresh the section
+                            contentEl.empty();
+                            this.addCustomParametersSection(contentEl);
+                        } catch (error) {
+                            console.error('Error during parameter deletion', error);
+                        }
                     }
                 });
             });
@@ -1520,181 +1554,115 @@ private openSubclassModal(
         });
     }
 
-    /**
-     * Open Custom Parameter Modal for Adding/Editing
-     */
-    private openCustomParameterModal(existingParam?: CustomParameter) {
-        const modal = new Modal(this.app);
-        modal.titleEl.setText(existingParam ? `Edit ${existingParam.label} Parameter` : 'Add New Custom Parameter');
+/**
+ * Open Custom Parameter Modal for Adding/Editing
+ */
+private openCustomParameterModal(existingParam?: CustomParameter) {
+    const modal = new Modal(this.app);
+    modal.titleEl.setText(existingParam ? `Edit ${existingParam.label} Parameter` : 'Add New Custom Parameter');
 
-        // Parameter Name (for code)
-        const nameContainer = modal.contentEl.createDiv('parameter-name');
-        nameContainer.createEl('h3', { text: 'Parameter Identification' });
-        
-        const nameInput = nameContainer.createEl('input', {
-            type: 'text',
-            placeholder: 'Internal parameter name (lowercase, no spaces)',
-            value: existingParam?.name || ''
-        });
-        nameInput.style.width = '100%';
-        
-        nameContainer.createEl('div', {
-            attr: { 
-                style: 'color: var(--text-error); display: none; margin-top: 5px; font-size: 0.9em;',
-                id: 'name-error' 
-            }
-        });
+    // Prevent modal from blocking input
+    modal.containerEl.addEventListener('keydown', (e) => {
+        // Stop the event from propagating up the DOM tree
+        e.stopPropagation();
+    }, false);
 
-        // Validate parameter name
-        const validateName = (): boolean => {
-            const name = nameInput.value.trim().toLowerCase();
-            const nameErrorEl = document.getElementById('name-error');
-            
-            if (!nameErrorEl) return false;
-            
-            // Check if name is empty
-            if (!name) {
-                nameErrorEl.textContent = 'Parameter name is required';
-                nameErrorEl.style.display = 'block';
-                return false;
-            }
+    modal.contentEl.addClass('npc-generator-parameter-modal');
 
-            // Check for valid characters (alphanumeric and underscore)
-            const validNameRegex = /^[a-z0-9_]+$/;
-            if (!validNameRegex.test(name)) {
-                nameErrorEl.textContent = 'Name must contain only lowercase letters, numbers, and underscores';
-                nameErrorEl.style.display = 'block';
-                return false;
-            }
+    const inputContainer = modal.contentEl.createDiv('parameter-input-container');
 
-            // Check for uniqueness (excluding current parameter)
-            const existingNames = this.plugin.settings.customParameters
-                .filter(p => p !== existingParam)
-                .map(p => p.name);
-            
-            if (existingNames.includes(name)) {
-                nameErrorEl.textContent = 'Parameter name must be unique';
-                nameErrorEl.style.display = 'block';
-                return false;
-            }
+    // Parameter Name Input
+    const nameContainer = inputContainer.createDiv('parameter-name');
+    nameContainer.createEl('h3', { text: 'Parameter Identification' });
+    
+    const nameInput = nameContainer.createEl('input', {
+        type: 'text',
+        placeholder: 'Internal parameter name (lowercase, no spaces)',
+        value: existingParam?.name || ''
+    });
+    nameInput.style.width = '100%';
 
-            nameErrorEl.style.display = 'none';
-            return true;
+    // Validate input and prevent invalid characters
+    nameInput.addEventListener('input', () => {
+        // Replace any non-lowercase alphanumeric or underscore characters
+        nameInput.value = nameInput.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    });
+
+    // Display Label Input
+    const labelContainer = inputContainer.createDiv('parameter-label');
+    labelContainer.createEl('h3', { text: 'Display Settings' });
+    
+    const labelInput = labelContainer.createEl('input', {
+        type: 'text',
+        placeholder: 'Label to display in UI',
+        value: existingParam?.label || ''
+    });
+    labelInput.style.width = '100%';
+
+    // Format Template Input
+    const formatContainer = inputContainer.createDiv('parameter-format');
+    formatContainer.createEl('h3', { text: 'Formatting' });
+    
+    const formatInput = formatContainer.createEl('input', {
+        type: 'text',
+        placeholder: 'Format template (e.g., "- {content}")',
+        value: existingParam?.format || '- "{content}"'
+    });
+    formatInput.style.width = '100%';
+
+    // Buttons container
+    const buttonContainer = modal.contentEl.createDiv('button-container');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.marginTop = '20px';
+    buttonContainer.style.gap = '10px';
+    
+    const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
+    cancelButton.addEventListener('click', () => {
+        modal.close();
+    });
+    
+    const saveButton = buttonContainer.createEl('button', { 
+        text: 'Save Parameter',
+        cls: 'mod-cta'
+    });
+    
+    saveButton.addEventListener('click', async () => {
+        const name = nameInput.value.trim().toLowerCase();
+        const label = labelInput.value.trim() || 'Custom Parameter';
+        const format = formatInput.value.trim() || '- "{content}"';
+
+        const paramToSave: CustomParameter = {
+            name,
+            label,
+            format,
+            enabled: true
         };
 
-        nameInput.addEventListener('blur', validateName);
+        if (existingParam) {
+            const paramIndex = this.plugin.settings.customParameters.indexOf(existingParam);
+            this.plugin.settings.customParameters[paramIndex] = paramToSave;
+        } else {
+            this.plugin.settings.customParameters.push(paramToSave);
+        }
 
-        // Display Label
-        const labelContainer = modal.contentEl.createDiv('parameter-label');
-        labelContainer.createEl('h3', { text: 'Display Settings' });
+        await this.plugin.saveSettings();
         
-        const labelInput = labelContainer.createEl('input', {
-            type: 'text',
-            placeholder: 'Label to display in UI',
-            value: existingParam?.label || ''
-        });
-        labelInput.style.width = '100%';
+        // Refresh the section
+        const contentEl = this.containerEl.querySelector('.custom-parameters-section')?.closest('div') as HTMLElement;
+        if (contentEl) {
+            contentEl.empty();
+            this.addCustomParametersSection(contentEl);
+        }
 
-        // Format Template
-        const formatContainer = modal.contentEl.createDiv('parameter-format');
-        formatContainer.createEl('h3', { text: 'Formatting' });
-        
-        const formatInput = formatContainer.createEl('input', {
-            type: 'text',
-            placeholder: 'Format template (e.g., "- {content}")',
-            value: existingParam?.format || '- "{content}"'
-        });
-        formatInput.style.width = '100%';
+        modal.close();
+    });
 
-        // Format help text
-        formatContainer.createEl('p', {
-            text: 'Use {content} for single values or {item} for list items',
-            attr: { style: 'color: var(--text-muted); font-size: 0.9em; margin-top: 5px;' }
-        });
+    // Remove previous event listeners and global logging
+    modal.open();
+}
 
-        // Example Preview
-        const previewContainer = modal.contentEl.createDiv('parameter-preview');
-        previewContainer.createEl('h3', { text: 'Preview' });
-        
-        const previewOutput = previewContainer.createEl('div', {
-            attr: { 
-                style: 'background: var(--background-secondary); padding: 10px; border-radius: 4px; font-family: var(--font-monospace); margin-top: 5px;' 
-            }
-        });
 
-        // Update preview function
-        const updatePreview = () => {
-            const format = formatInput.value || '- "{content}"';
-            previewOutput.textContent = format
-                .replace('{content}', 'Example content')
-                .replace('{item}', 'Example item');
-        };
-
-        // Update preview on input
-        formatInput.addEventListener('input', updatePreview);
-        updatePreview();
-
-        // Enabled Toggle
-        const enabledContainer = modal.contentEl.createDiv('parameter-enabled');
-        enabledContainer.createEl('h3', { text: 'Visibility' });
-        
-        const enabledToggle = document.createElement('input');
-        enabledToggle.type = 'checkbox';
-        enabledToggle.checked = existingParam?.enabled ?? true;
-        enabledContainer.appendChild(enabledToggle);
-        
-        enabledContainer.createEl('label', { 
-            text: ' Enabled (visible in NPC generation)',
-            attr: { style: 'margin-left: 10px;' }
-        });
-
-        // Save Button
-        const buttonContainer = modal.contentEl.createDiv('button-container');
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.justifyContent = 'flex-end';
-        buttonContainer.style.marginTop = '20px';
-        buttonContainer.style.gap = '10px';
-        
-        const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
-        cancelButton.addEventListener('click', () => {
-            modal.close();
-        });
-        
-        const saveButton = buttonContainer.createEl('button', { 
-            text: 'Save Parameter',
-            cls: 'mod-cta'
-        });
-        
-        saveButton.addEventListener('click', async () => {
-            // Validate name before saving
-            if (!validateName()) return;
-
-            // Prepare parameter object
-            const paramToSave: CustomParameter = {
-                name: nameInput.value.trim().toLowerCase(),
-                label: labelInput.value.trim() || 'Custom Parameter',
-                format: formatInput.value.trim() || '- "{content}"',
-                enabled: enabledToggle.checked
-            };
-
-            // Update or add parameter
-            if (existingParam) {
-                // Replace existing parameter
-                const paramIndex = this.plugin.settings.customParameters.indexOf(existingParam);
-                this.plugin.settings.customParameters[paramIndex] = paramToSave;
-            } else {
-                // Add new parameter
-                this.plugin.settings.customParameters.push(paramToSave);
-            }
-
-            // Save settings and refresh display
-            await this.plugin.saveSettings();
-            this.display();
-            modal.close();
-        });
-
-        modal.open();
-    }
 
     /**
      * Format race description for display
