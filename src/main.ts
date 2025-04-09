@@ -718,8 +718,16 @@ export default class NPCGenerator extends Plugin {
             statblockFormat: "fantasyStatblock"
         };
 
-        // Load saved settings or use defaults
-        this.settings = Object.assign({}, defaultSettings, await this.loadData());
+        // Load saved settings
+        const savedData = await this.loadData();
+    
+        // Create settings by merging defaults with saved data
+        this.settings = {
+            races: (savedData?.races?.length > 5) ? savedData.races : defaultSettings.races,
+            classes: (savedData?.classes?.length > 5) ? savedData.classes : defaultSettings.classes,
+            customParameters: savedData?.customParameters || [],
+            statblockFormat: savedData?.statblockFormat || "fantasyStatblock"
+        };
     }
 
     async saveSettings() {

@@ -231,15 +231,15 @@ export class NPCGeneratorModal extends Modal {
      */
     private showResults() {
         if (!this.npc) return;
-
+    
         const { contentEl } = this;
         contentEl.empty();
-
+    
         // NPC Summary
         contentEl.createEl('h2', { 
             text: `${this.npc.name} (Level ${this.npc.level} ${this.npc.race} ${this.npc.class})` 
         });
-
+    
         // Ability Scores
         const abilitiesContainer = contentEl.createDiv('npc-abilities');
         abilitiesContainer.createEl('h3', { text: 'Ability Scores' });
@@ -258,7 +258,7 @@ export class NPCGeneratorModal extends Modal {
                 text: `${score} (${modifier >= 0 ? '+' : ''}${modifier})` 
             });
         });
-
+    
         // Statblock
         const statblockContainer = contentEl.createDiv('npc-statblock');
         statblockContainer.createEl('h3', { text: 'Statblock' });
@@ -270,13 +270,34 @@ export class NPCGeneratorModal extends Modal {
         statblockText.style.width = '100%';
         statblockText.style.height = '300px';
         statblockText.style.fontFamily = 'monospace';
-
+    
+        // Button container
+        const buttonContainer = contentEl.createDiv('npc-buttons');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.marginTop = '20px';
+    
+        // Regenerate NPC button
+        const regenerateButton = buttonContainer.createEl('button', { text: 'Regenerate NPC' });
+        regenerateButton.addEventListener('click', () => {
+            // Get the same options but generate a new NPC
+            const options = {
+                level: this.npc!.level,
+                race: this.npc!.race,
+                class: this.npc!.class,
+                alignment: this.npc!.alignment
+            };
+            
+            this.npc = this.plugin.generateNPC(options);
+            this.showResults();
+        });
+    
         // Insert into Note button
-        const insertButton = contentEl.createEl('button', { text: 'Insert into Current Note' });
+        const insertButton = buttonContainer.createEl('button', { text: 'Insert into Current Note' });
         insertButton.addEventListener('click', this.insertStatblockIntoNote.bind(this));
-
+    
         // Back button
-        const backButton = contentEl.createEl('button', { text: 'Generate Another NPC' });
+        const backButton = buttonContainer.createEl('button', { text: 'Generate Another NPC' });
         backButton.addEventListener('click', () => this.onOpen());
     }
 
