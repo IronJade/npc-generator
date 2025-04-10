@@ -1260,10 +1260,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    * Add Custom Parameters Management Section
    */
   addCustomParametersSection(contentEl) {
-    const existingSection = contentEl.querySelector(".custom-parameters-section");
-    if (existingSection) {
-      existingSection.remove();
-    }
+    contentEl.empty();
     const customParamsSection = contentEl.createDiv("custom-parameters-section");
     const headerContainer = customParamsSection.createDiv("section-header");
     headerContainer.createEl("h2", { text: "Custom Parameters" });
@@ -1272,7 +1269,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       cls: "setting-item-description"
     });
     new import_obsidian2.Setting(customParamsSection).setName("Add Custom Parameter").setDesc("Create a new custom parameter for NPC generation").addButton((button) => {
-      return button.setButtonText("Add Parameter").setCta().onClick(() => this.openCustomParameterModal());
+      return button.setButtonText("Add Parameter").setCta().onClick(() => {
+        this.createCustomParameterModal();
+      });
     });
     const customParams = this.plugin.settings.customParameters.filter(
       (param) => param.name !== "spellcasting" && param.name !== "possessions"
@@ -1285,80 +1284,91 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         attr: { style: "color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;" }
       });
     } else {
-      const paramTable = paramsContainer.createEl("table");
-      paramTable.style.width = "100%";
-      paramTable.style.borderCollapse = "collapse";
-      const thead = paramTable.createEl("thead");
-      const headerRow = thead.createEl("tr");
-      headerRow.style.backgroundColor = "var(--background-secondary)";
-      ["Parameter", "Format", "Enabled", "Actions"].forEach((heading) => {
-        const th = headerRow.createEl("th");
-        th.style.padding = "8px";
-        th.style.textAlign = "left";
-        th.style.borderBottom = "1px solid var(--background-modifier-border)";
-        th.textContent = heading;
-      });
-      const tbody = paramTable.createEl("tbody");
-      customParams.forEach((param) => {
-        const row = tbody.createEl("tr");
-        row.style.borderBottom = "1px solid var(--background-modifier-border)";
-        const nameCell = row.createEl("td");
-        nameCell.style.padding = "8px";
-        const paramName = nameCell.createEl("div", { text: param.label });
-        paramName.style.fontWeight = "bold";
-        const paramId = nameCell.createEl("div", { text: param.name });
-        paramId.style.fontSize = "0.8em";
-        paramId.style.color = "var(--text-muted)";
-        const formatCell = row.createEl("td");
-        formatCell.style.padding = "8px";
-        formatCell.style.fontFamily = "var(--font-monospace)";
-        formatCell.style.fontSize = "0.9em";
-        formatCell.textContent = param.format;
-        const enabledCell = row.createEl("td");
-        enabledCell.style.padding = "8px";
-        const toggle = document.createElement("input");
-        toggle.type = "checkbox";
-        toggle.checked = param.enabled;
-        toggle.addEventListener("change", async () => {
-          param.enabled = toggle.checked;
-          await this.plugin.saveSettings();
-        });
-        enabledCell.appendChild(toggle);
-        const actionsCell = row.createEl("td");
-        actionsCell.style.padding = "8px";
-        const editButton = actionsCell.createEl("button", { text: "Edit" });
-        editButton.style.marginRight = "8px";
-        editButton.style.padding = "4px 8px";
-        editButton.style.fontSize = "0.8em";
-        editButton.addEventListener("click", () => {
-          this.openCustomParameterModal(param);
-        });
-        const deleteButton = actionsCell.createEl("button", { text: "Delete" });
-        deleteButton.style.padding = "4px 8px";
-        deleteButton.style.fontSize = "0.8em";
-        deleteButton.style.color = "var(--text-error)";
-        deleteButton.addEventListener("click", async () => {
-          console.log("Delete button clicked", {
-            paramToDelete: param,
-            currentParams: this.plugin.settings.customParameters
+      for (const param of customParams) {
+        new import_obsidian2.Setting(paramsContainer).setName(param.label).setDesc(param.format).addToggle((toggle) => {
+          toggle.setValue(param.enabled).onChange(async (value) => {
+            param.enabled = value;
+            await this.plugin.saveSettings();
           });
-          if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
-            console.log("Deletion confirmed");
-            try {
-              const paramIndex = this.plugin.settings.customParameters.indexOf(param);
-              console.log("Parameter index", paramIndex);
-              this.plugin.settings.customParameters.splice(paramIndex, 1);
+        }).addExtraButton((button) => {
+          button.setIcon("pencil").setTooltip("Edit").onClick(() => {
+            this.createCustomParameterModal(param);
+          });
+        }).addExtraButton((button) => {
+          button.setIcon("trash").setTooltip("Delete").onClick(async () => {
+            if (confirm(`Are you sure you want to delete the ${param.label} parameter?`)) {
+              this.plugin.settings.customParameters = this.plugin.settings.customParameters.filter((p) => p !== param);
               await this.plugin.saveSettings();
-              console.log("Settings saved after deletion");
-              contentEl.empty();
               this.addCustomParametersSection(contentEl);
-            } catch (error) {
-              console.error("Error during parameter deletion", error);
             }
-          }
+          });
         });
-      });
+      }
     }
+  }
+  /**
+   * Create Custom Parameter Modal
+   */
+  createCustomParameterModal(existingParam) {
+    const modal = new import_obsidian2.Modal(this.app);
+    let parameter = existingParam ? { ...existingParam } : {
+      name: "",
+      label: "",
+      format: '- "{content}"',
+      enabled: true
+    };
+    modal.titleEl.setText(parameter.name ? `Edit ${parameter.label} Parameter` : "New Custom Parameter");
+    modal.contentEl.empty();
+    new import_obsidian2.Setting(modal.contentEl).setName("Internal Name").setDesc("Used internally. Lowercase, no spaces.").addText((text) => {
+      text.setValue(parameter.name).onChange((value) => {
+        parameter.name = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+      });
+      setTimeout(() => {
+        text.inputEl.focus();
+      }, 50);
+    });
+    new import_obsidian2.Setting(modal.contentEl).setName("Display Label").setDesc("Shown in the UI.").addText((text) => {
+      text.setValue(parameter.label).onChange((value) => {
+        parameter.label = value;
+      });
+    });
+    new import_obsidian2.Setting(modal.contentEl).setName("Format").setDesc("Format template for displaying the parameter value. Use {content} as placeholder.").addText((text) => {
+      text.setValue(parameter.format).onChange((value) => {
+        parameter.format = value;
+      });
+    });
+    const footerEl = modal.contentEl.createDiv();
+    const footerButtons = new import_obsidian2.Setting(footerEl);
+    footerButtons.addButton((btn) => {
+      return btn.setButtonText("Save").setCta().onClick(async () => {
+        if (!parameter.name) {
+          new import_obsidian2.Notice("Parameter name is required");
+          return;
+        }
+        if (!parameter.label) {
+          parameter.label = parameter.name;
+        }
+        if (existingParam) {
+          const index = this.plugin.settings.customParameters.indexOf(existingParam);
+          if (index !== -1) {
+            this.plugin.settings.customParameters[index] = parameter;
+          }
+        } else {
+          this.plugin.settings.customParameters.push(parameter);
+        }
+        await this.plugin.saveSettings();
+        modal.close();
+        this.addCustomParametersSection(
+          this.containerEl.querySelector(".content-container")
+        );
+      });
+    });
+    footerButtons.addButton((btn) => {
+      return btn.setButtonText("Cancel").onClick(() => {
+        modal.close();
+      });
+    });
+    modal.open();
   }
   /**
    * Open Subclass Modal for Adding/Editing
@@ -2153,84 +2163,6 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     addToolButton.addEventListener("click", () => {
       addToolProf();
     });
-  }
-  /**
-   * Open Custom Parameter Modal for Adding/Editing
-   */
-  openCustomParameterModal(existingParam) {
-    const modal = new import_obsidian2.Modal(this.app);
-    modal.titleEl.setText(existingParam ? `Edit ${existingParam.label} Parameter` : "Add New Custom Parameter");
-    modal.containerEl.addEventListener("keydown", (e) => {
-      e.stopPropagation();
-    }, false);
-    modal.contentEl.addClass("npc-generator-parameter-modal");
-    const inputContainer = modal.contentEl.createDiv("parameter-input-container");
-    const nameContainer = inputContainer.createDiv("parameter-name");
-    nameContainer.createEl("h3", { text: "Parameter Identification" });
-    const nameInput = nameContainer.createEl("input", {
-      type: "text",
-      placeholder: "Internal parameter name (lowercase, no spaces)",
-      value: (existingParam == null ? void 0 : existingParam.name) || ""
-    });
-    nameInput.style.width = "100%";
-    nameInput.addEventListener("input", () => {
-      nameInput.value = nameInput.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
-    });
-    const labelContainer = inputContainer.createDiv("parameter-label");
-    labelContainer.createEl("h3", { text: "Display Settings" });
-    const labelInput = labelContainer.createEl("input", {
-      type: "text",
-      placeholder: "Label to display in UI",
-      value: (existingParam == null ? void 0 : existingParam.label) || ""
-    });
-    labelInput.style.width = "100%";
-    const formatContainer = inputContainer.createDiv("parameter-format");
-    formatContainer.createEl("h3", { text: "Formatting" });
-    const formatInput = formatContainer.createEl("input", {
-      type: "text",
-      placeholder: 'Format template (e.g., "- {content}")',
-      value: (existingParam == null ? void 0 : existingParam.format) || '- "{content}"'
-    });
-    formatInput.style.width = "100%";
-    const buttonContainer = modal.contentEl.createDiv("button-container");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.marginTop = "20px";
-    buttonContainer.style.gap = "10px";
-    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
-    cancelButton.addEventListener("click", () => {
-      modal.close();
-    });
-    const saveButton = buttonContainer.createEl("button", {
-      text: "Save Parameter",
-      cls: "mod-cta"
-    });
-    saveButton.addEventListener("click", async () => {
-      var _a;
-      const name = nameInput.value.trim().toLowerCase();
-      const label = labelInput.value.trim() || "Custom Parameter";
-      const format = formatInput.value.trim() || '- "{content}"';
-      const paramToSave = {
-        name,
-        label,
-        format,
-        enabled: true
-      };
-      if (existingParam) {
-        const paramIndex = this.plugin.settings.customParameters.indexOf(existingParam);
-        this.plugin.settings.customParameters[paramIndex] = paramToSave;
-      } else {
-        this.plugin.settings.customParameters.push(paramToSave);
-      }
-      await this.plugin.saveSettings();
-      const contentEl = (_a = this.containerEl.querySelector(".custom-parameters-section")) == null ? void 0 : _a.closest("div");
-      if (contentEl) {
-        contentEl.empty();
-        this.addCustomParametersSection(contentEl);
-      }
-      modal.close();
-    });
-    modal.open();
   }
   /**
    * Format race description for display
