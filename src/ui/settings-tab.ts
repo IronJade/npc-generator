@@ -1,22 +1,25 @@
-import { 
+import {
     App,
     ButtonComponent,
     ExtraButtonComponent,
-    PluginSettingTab, 
-    Setting, 
-    Modal, 
-    Notice 
+    PluginSettingTab,
+    Setting,
+    Modal,
+    Notice
 } from 'obsidian';
 
 import NPCGenerator from '../main';
-import { 
-    Race, 
-    CharacterClass, 
-    CustomParameter, 
-    AbilityName 
+import {
+    Race,
+    CharacterClass,
+    CustomParameter,
+    AbilityName
 } from '../types';
 
-import { defaultRaces, defaultClasses } from '../data/defaults';
+import {
+    defaultRaces,
+    defaultClasses
+} from '../data/defaults';
 
 export class NPCGeneratorSettingsTab extends PluginSettingTab {
     private plugin: NPCGenerator;
@@ -32,28 +35,34 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
         this.containerEl.innerHTML = '';
 
         // Recreate the entire settings view
-        const { containerEl } = this;
+        const {
+            containerEl
+        } = this;
         containerEl.empty();
         new Setting(containerEl).setHeading().setName("Basic Settings");
 
         // Title
-        containerEl.createEl('h1', { text: 'NPC Generator Settings' });
+        containerEl.createEl('h1', {
+            text: 'NPC Generator Settings'
+        });
 
         // Create navigation tabs
         const navContainer = containerEl.createDiv('nav-container');
         navContainer.style.display = 'flex';
         navContainer.style.marginBottom = '20px';
         navContainer.style.borderBottom = '1px solid var(--background-modifier-border)';
-        
+
         const createTab = (id: string, label: string) => {
-            const tab = navContainer.createEl('button', { text: label });
+            const tab = navContainer.createEl('button', {
+                text: label
+            });
             tab.style.padding = '8px 16px';
             tab.style.border = 'none';
             tab.style.background = 'none';
             tab.style.cursor = 'pointer';
             tab.style.borderRadius = '4px 4px 0 0';
             tab.style.marginRight = '4px';
-            
+
             if (id === this.activeTab) {
                 tab.style.borderBottom = '2px solid var(--interactive-accent)';
                 tab.style.fontWeight = 'bold';
@@ -64,7 +73,7 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
                 this.activeTab = id;
                 this.display();
             });
-            
+
             return tab;
         };
 
@@ -84,230 +93,253 @@ export class NPCGeneratorSettingsTab extends PluginSettingTab {
 
         // Display the active tab content
         switch (this.activeTab) {
-            case 'general':
-                this.addStatblockFormatSection(contentContainer);
-                break;
-            case 'races':
-                this.addRacesSection(contentContainer);
-                break;
-            case 'classes':
-                this.addClassesSection(contentContainer);
-                break;
-            case 'parameters':
-                this.addCustomParametersSection(contentContainer);
-                break;
-        }
-
-        new Setting(containerEl)
-        .setName("Restore Default Data")
-        .setDesc("Restore all default races, classes, and subclasses that may have been deleted.")
-        .addButton((button) => {
-            return button
+        case 'general':
+            this.addStatblockFormatSection(contentContainer);
+            // Add the "Restore Default Data" button only in the general tab
+            new Setting(contentContainer)
+            .setName("Restore Default Data")
+            .setDesc("Restore all default races, classes, and subclasses that may have been deleted.")
+            .addButton((button) => {
+                return button
                 .setButtonText("Restore Defaults")
                 .setCta()
-                .onClick(async () => {
+                .onClick(async() => {
                     await this.restoreDefaultData();
                 });
+            });
+            break;
+        case 'races':
+            this.addRacesSection(contentContainer);
+            break;
+        case 'classes':
+            this.addClassesSection(contentContainer);
+            break;
+        case 'parameters':
+            this.addCustomParametersSection(contentContainer);
+            break;
+        }
+    }
+
+    // Updated restore default data functionality
+    private async restoreDefaultData() {
+        // Create a new copy of the default races and classes to avoid reference issues
+        const racesToAdd = JSON.parse(JSON.stringify(defaultRaces));
+        const classesToAdd = JSON.parse(JSON.stringify(defaultClasses));
+
+        // Restore races
+        this.mergeDefaultRaces(racesToAdd);
+
+        // Restore classes
+        this.mergeDefaultClasses(classesToAdd);
+
+        // Show confirmation
+        new Notice('Default races and classes have been restored!');
+
+        // Save the updated settings
+        await this.plugin.saveSettings();
+
+        // Refresh the display to show the changes
+        this.display();
+    }
+
+    private mergeDefaultRaces(defaultRaces: Race[]) {
+        // Create a map of existing races by name
+        const existingRaces = new Map<string, Race>();
+        this.plugin.settings.races.forEach(race => existingRaces.set(race.name, race));
+
+        // Add any missing default races
+        defaultRaces.forEach(defaultRace => {
+            if (!existingRaces.has(defaultRace.name)) {
+                console.log(`Adding missing race: ${defaultRace.name}`);
+                this.plugin.settings.races.push(defaultRace);
+            }
         });
     }
 
-// Add the helper methods for restoring defaults
-private async restoreDefaultData() {
-    this.mergeDefaultRaces(defaultRaces);
-    this.mergeDefaultClasses(defaultClasses);
-    await this.plugin.saveSettings();
-}
+    private mergeDefaultClasses(defaultClasses: CharacterClass[]) {
+        // Create a map of existing classes by name
+        const existingClasses = new Map<string, CharacterClass>();
+        this.plugin.settings.classes.forEach(cls => existingClasses.set(cls.name, cls));
 
-private mergeDefaultRaces(defaultRaces: Race[]) {
-    // Create a map of existing races by name
-    const existingRaces = new Map<string, Race>();
-    this.plugin.settings.races.forEach(race => existingRaces.set(race.name, race));
-    
-    // Add any missing default races
-    defaultRaces.forEach(defaultRace => {
-        if (!existingRaces.has(defaultRace.name)) {
-            this.plugin.settings.races.push(defaultRace);
-        }
-    });
-}
+        // Add any missing default classes
+        defaultClasses.forEach(defaultClass => {
+            if (!existingClasses.has(defaultClass.name)) {
+                console.log(`Adding missing class: ${defaultClass.name}`);
+                this.plugin.settings.classes.push(defaultClass);
+            } else {
+                // For existing classes, merge in any missing subclasses
+                const existingClass = existingClasses.get(defaultClass.name);
 
-private mergeDefaultClasses(defaultClasses: CharacterClass[]) {
-    // Create a map of existing classes by name
-    const existingClasses = new Map<string, CharacterClass>();
-    this.plugin.settings.classes.forEach(cls => existingClasses.set(cls.name, cls));
-    
-    // Add any missing default classes
-    defaultClasses.forEach(defaultClass => {
-        if (!existingClasses.has(defaultClass.name)) {
-            this.plugin.settings.classes.push(defaultClass);
-        } else {
-            // For existing classes, merge in any missing subclasses
-            const existingClass = existingClasses.get(defaultClass.name);
-            
-            // Add null check to handle undefined existingClass
-            if (existingClass && defaultClass.subclasses && defaultClass.subclasses.length) {
-                if (!existingClass.subclasses) {
-                    existingClass.subclasses = [];
-                }
-                
-                // Create a map of existing subclasses
-                const existingSubclasses = new Map<string, any>();
-                if (existingClass.subclasses) {
-                    existingClass.subclasses.forEach(sub => existingSubclasses.set(sub.name, sub));
-                }
-                
-                // Add any missing subclasses
-                defaultClass.subclasses.forEach(defaultSub => {
-                    if (!existingSubclasses.has(defaultSub.name) && existingClass.subclasses) {
-                        existingClass.subclasses.push(defaultSub);
+                // Add null check to handle undefined existingClass
+                if (existingClass && defaultClass.subclasses && defaultClass.subclasses.length) {
+                    if (!existingClass.subclasses) {
+                        existingClass.subclasses = [];
                     }
-                });
+
+                    // Create a map of existing subclasses
+                    const existingSubclasses = new Map<string, any>();
+                    if (existingClass.subclasses) {
+                        existingClass.subclasses.forEach(sub => existingSubclasses.set(sub.name, sub));
+                    }
+
+                    // Add any missing subclasses
+                    defaultClass.subclasses.forEach(defaultSub => {
+                        if (!existingSubclasses.has(defaultSub.name) && existingClass.subclasses) {
+                            console.log(`Adding missing subclass ${defaultSub.name} to ${defaultClass.name}`);
+                            existingClass.subclasses.push(defaultSub);
+                        }
+                    });
+                }
             }
-        }
-    });
-}
+        });
+    }
 
     /**
      * Add Statblock Format Selection
      */
     private addStatblockFormatSection(contentEl: HTMLElement) {
         const statblockSection = contentEl.createDiv('statblock-format-section');
-        statblockSection.createEl('h2', { text: 'Statblock Format' });
-        statblockSection.createEl('p', { 
+        statblockSection.createEl('h2', {
+            text: 'Statblock Format'
+        });
+        statblockSection.createEl('p', {
             text: 'Select how NPC statblocks should be formatted when inserted into your notes.',
             cls: 'setting-item-description'
         });
 
         new Setting(statblockSection)
-            .setName('Choose Statblock Style')
-            .setDesc('Select the format for generated NPC statblocks')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('fantasyStatblock', 'Fantasy Statblock')
-                    .addOption('basic', 'Basic Text')
-                    .setValue(this.plugin.settings.statblockFormat)
-                    .onChange(async (value) => {
-                        this.plugin.settings.statblockFormat = value as "fantasyStatblock" | "basic";
-                        await this.plugin.saveSettings();
-                    });
+        .setName('Choose Statblock Style')
+        .setDesc('Select the format for generated NPC statblocks')
+        .addDropdown(dropdown => {
+            dropdown
+            .addOption('fantasyStatblock', 'Fantasy Statblock')
+            .addOption('basic', 'Basic Text')
+            .setValue(this.plugin.settings.statblockFormat)
+            .onChange(async(value) => {
+                this.plugin.settings.statblockFormat = value as "fantasyStatblock" | "basic";
+                await this.plugin.saveSettings();
             });
+        });
     }
 
-/**
- * Add Races Management Section
- */
-private addRacesSection(contentEl: HTMLElement) {
-    const racesSection = contentEl.createDiv('races-section');
-    
-    // Section header with description
-    const headerContainer = racesSection.createDiv('section-header');
-    headerContainer.createEl('h2', { text: 'Races' });
-    headerContainer.createEl('p', { 
-        text: 'Manage the available races for NPC generation.',
-        cls: 'setting-item-description'
-    });
+    /**
+     * Add Races Management Section
+     */
+    private addRacesSection(contentEl: HTMLElement) {
+        const racesSection = contentEl.createDiv('races-section');
 
-    // Add Race Button
-    new Setting(racesSection)
+        // Section header with description
+        const headerContainer = racesSection.createDiv('section-header');
+        headerContainer.createEl('h2', {
+            text: 'Races'
+        });
+        headerContainer.createEl('p', {
+            text: 'Manage the available races for NPC generation.',
+            cls: 'setting-item-description'
+        });
+
+        // Add Race Button
+        new Setting(racesSection)
         .setName('Add New Race')
         .setDesc('Create a new playable race for NPC generation')
         .addButton((button: ButtonComponent): ButtonComponent => {
             return button
-                .setTooltip('Add Race')
-                .setCta()
-                .setButtonText('+')
-                .onClick(() => this.openRaceModal());
+            .setTooltip('Add Race')
+            .setCta()
+            .setButtonText('+')
+            .onClick(() => this.openRaceModal());
         });
 
-    // Race cards container with grid layout
-    const racesContainer = racesSection.createDiv('races-container');
-    racesContainer.style.display = 'grid';
-    racesContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
-    racesContainer.style.gap = '10px';
-    racesContainer.style.marginTop = '20px';
+        // Race cards container with grid layout
+        const racesContainer = racesSection.createDiv('races-container');
+        racesContainer.style.display = 'grid';
+        racesContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+        racesContainer.style.gap = '10px';
+        racesContainer.style.marginTop = '20px';
 
-    // Existing Races List as cards
-    this.plugin.settings.races.forEach((race, index) => {
-        const raceCard = racesContainer.createDiv('race-card');
-        raceCard.style.border = '1px solid var(--background-modifier-border)';
-        raceCard.style.borderRadius = '5px';
-        raceCard.style.padding = '10px';
-        raceCard.style.backgroundColor = 'var(--background-secondary)';
-        
-        const raceHeader = raceCard.createDiv('race-header');
-        raceHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
-        raceHeader.style.paddingBottom = '5px';
-        raceHeader.style.marginBottom = '8px';
-        
-        raceHeader.createEl('h3', { 
-            text: race.name,
-            attr: { style: 'margin: 0; font-size: 1.1em;' }
-        });
-        
-        const raceDescription = raceCard.createDiv('race-description');
-        raceDescription.style.fontSize = '0.9em';
-        raceDescription.style.marginBottom = '10px';
-        raceDescription.style.color = 'var(--text-muted)';
-        raceDescription.textContent = this.formatRaceDescription(race);
-        
-        const raceActions = raceCard.createDiv('race-actions');
-        raceActions.style.display = 'flex';
-        raceActions.style.justifyContent = 'flex-end';
-        raceActions.style.gap = '5px';
-        
-        // Edit button with icon
-        new ExtraButtonComponent(raceActions.createDiv())
+        // Existing Races List as cards
+        this.plugin.settings.races.forEach((race, index) => {
+            const raceCard = racesContainer.createDiv('race-card');
+            raceCard.style.border = '1px solid var(--background-modifier-border)';
+            raceCard.style.borderRadius = '5px';
+            raceCard.style.padding = '10px';
+            raceCard.style.backgroundColor = 'var(--background-secondary)';
+
+            const raceHeader = raceCard.createDiv('race-header');
+            raceHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
+            raceHeader.style.paddingBottom = '5px';
+            raceHeader.style.marginBottom = '8px';
+
+            raceHeader.createEl('h3', {
+                text: race.name,
+                attr: {
+                    style: 'margin: 0; font-size: 1.1em;'
+                }
+            });
+
+            const raceDescription = raceCard.createDiv('race-description');
+            raceDescription.style.fontSize = '0.9em';
+            raceDescription.style.marginBottom = '10px';
+            raceDescription.style.color = 'var(--text-muted)';
+            raceDescription.textContent = this.formatRaceDescription(race);
+
+            const raceActions = raceCard.createDiv('race-actions');
+            raceActions.style.display = 'flex';
+            raceActions.style.justifyContent = 'flex-end';
+            raceActions.style.gap = '5px';
+
+            // Edit button with icon
+            new ExtraButtonComponent(raceActions.createDiv())
             .setIcon("pencil")
             .setTooltip("Edit")
             .onClick(() => {
                 this.openRaceModal(race, index);
             });
-        
-        // Delete button with icon - no confirmation dialog
-        new ExtraButtonComponent(raceActions.createDiv())
+
+            // Delete button with icon - no confirmation dialog
+            new ExtraButtonComponent(raceActions.createDiv())
             .setIcon("trash")
             .setTooltip("Delete")
-            .onClick(async () => {
+            .onClick(async() => {
                 this.plugin.settings.races.splice(index, 1);
                 await this.plugin.saveSettings();
                 this.display();
             });
-    });
-}
-
-
-
+        });
+    }
 
     /**
      * Add Classes Management Section
      */
     private addClassesSection(contentEl: HTMLElement) {
         const classesSection = contentEl.createDiv('classes-section');
-        
+
         // Section header with description
         const headerContainer = classesSection.createDiv('section-header');
-        headerContainer.createEl('h2', { text: 'Classes' });
-        headerContainer.createEl('p', { 
+        headerContainer.createEl('h2', {
+            text: 'Classes'
+        });
+        headerContainer.createEl('p', {
             text: 'Manage the available classes and subclasses for NPC generation.',
             cls: 'setting-item-description'
         });
-    
+
         // Add Class Button
         new Setting(classesSection)
-            .setName('Add New Class')
-            .setDesc('Create a new character class for NPC generation')
-            .addButton((button: ButtonComponent): ButtonComponent => {
-                return button
-                    .setTooltip('Add Class')
-                    .setCta()
-                    .setButtonText('+')
-                    .onClick(() => this.openClassModal());
-            });
-    
+        .setName('Add New Class')
+        .setDesc('Create a new character class for NPC generation')
+        .addButton((button: ButtonComponent): ButtonComponent => {
+            return button
+            .setTooltip('Add Class')
+            .setCta()
+            .setButtonText('+')
+            .onClick(() => this.openClassModal());
+        });
+
         // Create a collapsible list for classes
         const classesContainer = classesSection.createDiv('classes-container');
         classesContainer.style.marginTop = '15px';
-    
+
         // Existing Classes List with collapsible details
         this.plugin.settings.classes.forEach((characterClass, index) => {
             const classItem = classesContainer.createDiv('class-item');
@@ -315,7 +347,7 @@ private addRacesSection(contentEl: HTMLElement) {
             classItem.style.border = '1px solid var(--background-modifier-border)';
             classItem.style.borderRadius = '5px';
             classItem.style.overflow = 'hidden';
-            
+
             // Class header (always visible)
             const classHeader = classItem.createDiv('class-header');
             classHeader.style.padding = '10px';
@@ -324,40 +356,42 @@ private addRacesSection(contentEl: HTMLElement) {
             classHeader.style.display = 'flex';
             classHeader.style.justifyContent = 'space-between';
             classHeader.style.alignItems = 'center';
-            
+
             const classTitle = classHeader.createDiv('class-title');
             classTitle.style.fontWeight = 'bold';
             classTitle.textContent = characterClass.name;
-            
+
             const classSummary = classHeader.createDiv('class-summary');
             classSummary.style.fontSize = '0.9em';
             classSummary.style.color = 'var(--text-muted)';
             classSummary.textContent = this.formatClassDescription(characterClass);
-            
+
             const expandIcon = classHeader.createDiv('expand-icon');
             expandIcon.textContent = '▼';
             expandIcon.style.marginLeft = '10px';
-            
+
             // Class details (collapsible)
             const classDetails = classItem.createDiv('class-details');
             classDetails.style.padding = '10px';
             classDetails.style.borderTop = '1px solid var(--background-modifier-border)';
             classDetails.style.display = 'none';
-            
+
             // Class features section
             const featuresSection = classDetails.createDiv('features-section');
             featuresSection.style.marginBottom = '10px';
-            
-            featuresSection.createEl('h4', { 
+
+            featuresSection.createEl('h4', {
                 text: 'Class Features',
-                attr: { style: 'margin: 0 0 5px 0; font-size: 1em;' }
+                attr: {
+                    style: 'margin: 0 0 5px 0; font-size: 1em;'
+                }
             });
-            
+
             if (characterClass.features && characterClass.features.length > 0) {
                 const featuresList = featuresSection.createEl('ul');
                 featuresList.style.margin = '0';
                 featuresList.style.paddingLeft = '20px';
-                
+
                 characterClass.features.forEach(feature => {
                     const featureItem = featuresList.createEl('li');
                     featureItem.style.fontSize = '0.9em';
@@ -366,163 +400,172 @@ private addRacesSection(contentEl: HTMLElement) {
             } else {
                 featuresSection.createEl('p', {
                     text: 'No features defined.',
-                    attr: { style: 'color: var(--text-muted); font-style: italic; margin: 0;' }
+                    attr: {
+                        style: 'color: var(--text-muted); font-style: italic; margin: 0;'
+                    }
                 });
             }
-            
-// Subclasses section
-const subclassesSection = classDetails.createDiv('subclasses-section');
 
-const subclassHeader = subclassesSection.createDiv('subclass-header');
-subclassHeader.style.display = 'flex';
-subclassHeader.style.justifyContent = 'space-between';
-subclassHeader.style.alignItems = 'center';
-subclassHeader.style.marginBottom = '5px';
+            // Subclasses section
+            const subclassesSection = classDetails.createDiv('subclasses-section');
 
-subclassHeader.createEl('h4', { 
-    text: 'Subclasses',
-    attr: { style: 'margin: 0; font-size: 1em;' }
-});
+            const subclassHeader = subclassesSection.createDiv('subclass-header');
+            subclassHeader.style.display = 'flex';
+            subclassHeader.style.justifyContent = 'space-between';
+            subclassHeader.style.alignItems = 'center';
+            subclassHeader.style.marginBottom = '5px';
 
-const addSubclassButton = subclassHeader.createEl('button', { text: 'Add Subclass' });
-addSubclassButton.style.fontSize = '0.8em';
-addSubclassButton.style.padding = '2px 6px';
-addSubclassButton.addEventListener('click', () => {
-    this.openSubclassModal(characterClass, index);
-});
-
-if (characterClass.subclasses && characterClass.subclasses.length > 0) {
-    const subclassesList = subclassesSection.createEl('ul');
-    subclassesList.style.margin = '0';
-    subclassesList.style.paddingLeft = '20px';
-    
-    characterClass.subclasses.forEach((subclass, subclassIndex) => {
-        const subclassItem = subclassesList.createEl('li');
-        subclassItem.style.fontSize = '0.9em';
-        subclassItem.style.marginBottom = '5px';
-        subclassItem.style.display = 'flex'; // Add flex display
-        subclassItem.style.justifyContent = 'space-between'; // Space between name and buttons
-        subclassItem.style.alignItems = 'center'; // Center items vertically
-        
-        // Create text container for the name
-        const subclassText = subclassItem.createSpan();
-        subclassText.textContent = subclass.name;
-        
-        // Create action buttons container
-        const subclassActions = subclassItem.createDiv('subclass-actions');
-        subclassActions.style.display = 'flex'; // Make buttons flex
-        subclassActions.style.gap = '5px'; // Add gap between buttons
-        
-        // Edit button
-        new ExtraButtonComponent(subclassActions.createDiv())
-            .setIcon('pencil')
-            .setTooltip('Edit')
-            .onClick(() => {
-                this.openSubclassModal(characterClass, index, subclass, subclassIndex);
-            });
-        
-        // Delete button - no confirmation dialog
-        new ExtraButtonComponent(subclassActions.createDiv())
-            .setIcon('trash')
-            .setTooltip('Delete')
-            .onClick(async () => {
-                characterClass.subclasses?.splice(subclassIndex, 1);
-                await this.plugin.saveSettings();
-                
-                // Refresh only the class section
-                const classesSection = this.containerEl.querySelector('.classes-section') as HTMLElement;
-                if (classesSection) {
-                    classesSection.empty();
-                    this.addClassesSection(classesSection);
+            subclassHeader.createEl('h4', {
+                text: 'Subclasses',
+                attr: {
+                    style: 'margin: 0; font-size: 1em;'
                 }
             });
-    });
 
-    } else {
-        subclassesSection.createEl('p', {
-            text: 'No subclasses defined.',
-            attr: { style: 'color: var(--text-muted); font-style: italic; margin: 0;' }
-        });
-    }
-            
-        // Class actions
-        const classActions = classDetails.createDiv('class-actions');
-        classActions.style.display = 'flex';
-        classActions.style.justifyContent = 'flex-end';
-        classActions.style.marginTop = '10px';
-        classActions.style.borderTop = '1px solid var(--background-modifier-border)';
-        classActions.style.paddingTop = '10px';
-        classActions.style.gap = '5px';
-        
-        // Edit button
-        new ExtraButtonComponent(classActions.createDiv())
+            const addSubclassButton = subclassHeader.createEl('button', {
+                text: 'Add Subclass'
+            });
+            addSubclassButton.style.fontSize = '0.8em';
+            addSubclassButton.style.padding = '2px 6px';
+            addSubclassButton.addEventListener('click', () => {
+                this.openSubclassModal(characterClass, index);
+            });
+
+            if (characterClass.subclasses && characterClass.subclasses.length > 0) {
+                const subclassesList = subclassesSection.createEl('ul');
+                subclassesList.style.margin = '0';
+                subclassesList.style.paddingLeft = '20px';
+
+                characterClass.subclasses.forEach((subclass, subclassIndex) => {
+                    const subclassItem = subclassesList.createEl('li');
+                    subclassItem.style.fontSize = '0.9em';
+                    subclassItem.style.marginBottom = '5px';
+                    subclassItem.style.display = 'flex'; // Add flex display
+                    subclassItem.style.justifyContent = 'space-between'; // Space between name and buttons
+                    subclassItem.style.alignItems = 'center'; // Center items vertically
+
+                    // Create text container for the name
+                    const subclassText = subclassItem.createSpan();
+                    subclassText.textContent = subclass.name;
+
+                    // Create action buttons container
+                    const subclassActions = subclassItem.createDiv('subclass-actions');
+                    subclassActions.style.display = 'flex'; // Make buttons flex
+                    subclassActions.style.gap = '5px'; // Add gap between buttons
+
+                    // Edit button
+                    new ExtraButtonComponent(subclassActions.createDiv())
+                    .setIcon('pencil')
+                    .setTooltip('Edit')
+                    .onClick(() => {
+                        this.openSubclassModal(characterClass, index, subclass, subclassIndex);
+                    });
+
+                    // Delete button - no confirmation dialog
+                    new ExtraButtonComponent(subclassActions.createDiv())
+                    .setIcon('trash')
+                    .setTooltip('Delete')
+                    .onClick(async() => {
+                        characterClass.subclasses?.splice(subclassIndex, 1);
+                        await this.plugin.saveSettings();
+
+                        // Refresh only the class section
+                        const classesSection = this.containerEl.querySelector('.classes-section') as HTMLElement;
+                        if (classesSection) {
+                            classesSection.empty();
+                            this.addClassesSection(classesSection);
+                        }
+                    });
+                });
+
+            } else {
+                subclassesSection.createEl('p', {
+                    text: 'No subclasses defined.',
+                    attr: {
+                        style: 'color: var(--text-muted); font-style: italic; margin: 0;'
+                    }
+                });
+            }
+
+            // Class actions
+            const classActions = classDetails.createDiv('class-actions');
+            classActions.style.display = 'flex';
+            classActions.style.justifyContent = 'flex-end';
+            classActions.style.marginTop = '10px';
+            classActions.style.borderTop = '1px solid var(--background-modifier-border)';
+            classActions.style.paddingTop = '10px';
+            classActions.style.gap = '5px';
+
+            // Edit button
+            new ExtraButtonComponent(classActions.createDiv())
             .setIcon('pencil')
             .setTooltip('Edit Class')
             .onClick(() => {
                 this.openClassModal(characterClass, index);
             });
-        
-        // Delete button - no confirmation dialog
-        new ExtraButtonComponent(classActions.createDiv())
+
+            // Delete button - no confirmation dialog
+            new ExtraButtonComponent(classActions.createDiv())
             .setIcon('trash')
             .setTooltip('Delete Class')
-            .onClick(async () => {
+            .onClick(async() => {
                 this.plugin.settings.classes.splice(index, 1);
                 await this.plugin.saveSettings();
                 this.display();
             });
-        
-        // Toggle expansion on header click
-        classHeader.addEventListener('click', () => {
-            const expanded = classDetails.style.display !== 'none';
-            classDetails.style.display = expanded ? 'none' : 'block';
-            expandIcon.textContent = expanded ? '▼' : '▲';
+
+            // Toggle expansion on header click
+            classHeader.addEventListener('click', () => {
+                const expanded = classDetails.style.display !== 'none';
+                classDetails.style.display = expanded ? 'none' : 'block';
+                expandIcon.textContent = expanded ? '▼' : '▲';
+            });
         });
-    });
-}
+    }
 
     /**
      * Add Custom Parameters Management Section
      */
-private addCustomParametersSection(contentEl: HTMLElement) {
-    contentEl.empty();
-    
-    const customParamsSection = contentEl.createDiv('custom-parameters-section');
-    
-    // Section header with description
-    const headerContainer = customParamsSection.createDiv('section-header');
-    headerContainer.createEl('h2', { text: 'Custom Parameters' });
-    headerContainer.createEl('p', { 
-        text: 'Add custom fields to your NPC generation form and statblocks.',
-        cls: 'setting-item-description'
-    });
+    private addCustomParametersSection(contentEl: HTMLElement) {
+        contentEl.empty();
 
-    // Add Custom Parameter Button
-    new Setting(customParamsSection)
+        const customParamsSection = contentEl.createDiv('custom-parameters-section');
+
+        // Section header with description
+        const headerContainer = customParamsSection.createDiv('section-header');
+        headerContainer.createEl('h2', {
+            text: 'Custom Parameters'
+        });
+        headerContainer.createEl('p', {
+            text: 'Add custom fields to your NPC generation form and statblocks.',
+            cls: 'setting-item-description'
+        });
+
+        // Add Custom Parameter Button
+        new Setting(customParamsSection)
         .setName('Add Custom Parameter')
         .setDesc('Create a new custom parameter for NPC generation')
         .addButton((button: ButtonComponent): ButtonComponent => {
             return button
-                .setTooltip('Add Parameter')
-                .setCta()
-                .setButtonText('+')
-                .onClick(() => {
-                    this.createCustomParameterModal();
-                });
+            .setTooltip('Add Parameter')
+            .setCta()
+            .setButtonText('+')
+            .onClick(() => {
+                this.createCustomParameterModal();
+            });
         });
 
-    // Existing Custom Parameters List
-    const customParams = this.plugin.settings.customParameters
-        .filter(param => 
-            param.name !== 'spellcasting' && 
-            param.name !== 'possessions'
-        );
+        // Existing Custom Parameters List
+        const customParams = this.plugin.settings.customParameters
+            .filter(param =>
+                param.name !== 'spellcasting' &&
+                param.name !== 'possessions');
 
-    const paramsContainer = customParamsSection.createDiv('params-container');
-    paramsContainer.style.marginTop = '20px';
+        const paramsContainer = customParamsSection.createDiv('params-container');
+        paramsContainer.style.marginTop = '20px';
 
-    if (customParams.length === 0) {
-        paramsContainer
+        if (customParams.length === 0) {
+            paramsContainer
             .createDiv({
                 attr: {
                     style: 'display: flex; justify-content: center; padding-bottom: 18px;'
@@ -531,118 +574,120 @@ private addCustomParametersSection(contentEl: HTMLElement) {
             .createSpan({
                 text: 'No custom parameters defined.'
             });
-    } else {
-        for (const param of customParams) {
-            const paramSetting = new Setting(paramsContainer)
-                .setName(param.label)
-                .setDesc(param.format)
-                .addToggle(toggle => {
-                    toggle.setValue(param.enabled)
-                        .onChange(async (value) => {
+        } else {
+            for (const param of customParams) {
+                const paramSetting = new Setting(paramsContainer)
+                    .setName(param.label)
+                    .setDesc(param.format)
+                    .addToggle(toggle => {
+                        toggle.setValue(param.enabled)
+                        .onChange(async(value) => {
                             param.enabled = value;
                             await this.plugin.saveSettings();
                         });
-                });
-            
-            // Edit button
-            paramSetting.addExtraButton(button => {
-                button.setIcon('pencil')
+                    });
+
+                // Edit button
+                paramSetting.addExtraButton(button => {
+                    button.setIcon('pencil')
                     .setTooltip('Edit')
                     .onClick(() => {
                         this.createCustomParameterModal(param);
                     });
-                return button;
-            });
-            
-            // Delete button - no confirmation dialog
-            paramSetting.addExtraButton(button => {
-                button.setIcon('trash')
+                    return button;
+                });
+
+                // Delete button - no confirmation dialog
+                paramSetting.addExtraButton(button => {
+                    button.setIcon('trash')
                     .setTooltip('Delete')
-                    .onClick(async () => {
+                    .onClick(async() => {
                         // Direct deletion without confirmation
-                        this.plugin.settings.customParameters = 
+                        this.plugin.settings.customParameters =
                             this.plugin.settings.customParameters.filter(p => p !== param);
-                        
+
                         await this.plugin.saveSettings();
                         // Refresh the view
                         this.addCustomParametersSection(contentEl);
                     });
-                return button;
-            });
+                    return button;
+                });
+            }
         }
     }
-}
-    
+
     /**
      * Create Custom Parameter Modal
      */
     private createCustomParameterModal(existingParam?: CustomParameter) {
         const modal = new Modal(this.app);
-        let parameter: CustomParameter = existingParam ? {...existingParam} : {
+        let parameter: CustomParameter = existingParam ? {
+            ...existingParam
+        } : {
             name: '',
             label: '',
             format: '- "{content}"',
             enabled: true
         };
-        
+
         modal.titleEl.setText(parameter.name ? `Edit ${parameter.label} Parameter` : 'New Custom Parameter');
         modal.contentEl.empty();
-        
-    // Name input
-    new Setting(modal.contentEl)
+
+        // Name input
+        new Setting(modal.contentEl)
         .setName('Internal Name')
         .setDesc('Used internally. Lowercase, no spaces.')
         .addText(text => {
             text.setValue(parameter.name)
-                .onChange(value => {
-                    parameter.name = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                });
-            
+            .onChange(value => {
+                parameter.name = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+            });
+
             // Add a small delay to make sure focus works properly
             setTimeout(() => {
                 text.inputEl.focus();
             }, 50);
         });
-    
-    // Label input
-    new Setting(modal.contentEl)
+
+        // Label input
+        new Setting(modal.contentEl)
         .setName('Display Label')
         .setDesc('Shown in the UI.')
         .addText(text => {
             text.setValue(parameter.label)
-                .onChange(value => {
-                    parameter.label = value;
-                });
+            .onChange(value => {
+                parameter.label = value;
+            });
         });
-    
-    // Format input
-    new Setting(modal.contentEl)
+
+        // Format input
+        new Setting(modal.contentEl)
         .setName('Format')
         .setDesc('Format template for displaying the parameter value. Use {content} as placeholder.')
         .addText(text => {
             text.setValue(parameter.format)
-                .onChange(value => {
-                    parameter.format = value;
-                });
+            .onChange(value => {
+                parameter.format = value;
+            });
         });
-    
-    // Buttons
-    const footerEl = modal.contentEl.createDiv();
-    const footerButtons = new Setting(footerEl);
-    
-    footerButtons.addButton(btn => {
-        return btn.setButtonText('Save')
+
+        // Buttons
+        const footerEl = modal.contentEl.createDiv();
+        const footerButtons = new Setting(footerEl);
+
+        footerButtons.addButton(btn => {
+            return btn.setButtonText('Save')
             .setCta()
-            .onClick(async () => {
+            .onClick(async() => {
                 if (!parameter.name) {
                     new Notice('Parameter name is required');
                     return;
                 }
-                
+
                 if (!parameter.label) {
                     parameter.label = parameter.name;
                 }
-                
+
                 if (existingParam) {
                     // Find and replace the existing parameter
                     const index = this.plugin.settings.customParameters.indexOf(existingParam);
@@ -653,210 +698,25 @@ private addCustomParametersSection(contentEl: HTMLElement) {
                     // Add new parameter
                     this.plugin.settings.customParameters.push(parameter);
                 }
-                
+
                 await this.plugin.saveSettings();
                 modal.close();
-                
+
                 // Refresh the custom parameters section
                 this.addCustomParametersSection(
-                    this.containerEl.querySelector('.content-container') as HTMLElement
-                );
+                    this.containerEl.querySelector('.content-container') as HTMLElement);
             });
-    });
-    
-    footerButtons.addButton(btn => {
-        return btn.setButtonText('Cancel')
+        });
+
+        footerButtons.addButton(btn => {
+            return btn.setButtonText('Cancel')
             .onClick(() => {
                 modal.close();
             });
-    });
-    
-    modal.open();
-}
-
-/**
- * Open Subclass Modal for Adding/Editing
- */
-private openSubclassModal(
-    characterClass: CharacterClass, 
-    classIndex: number, 
-    existingSubclass?: { name: string; description: string; features: { level: number; name: string; description: string; }[] },
-    subclassIndex?: number
-) {
-    const modal = new Modal(this.app);
-    modal.titleEl.setText(existingSubclass ? `Edit ${existingSubclass.name} Subclass` : `Add New Subclass for ${characterClass.name}`);
-    modal.contentEl.style.width = '500px';
-
-    // Subclass Name
-    new Setting(modal.contentEl)
-        .setName('Subclass Name')
-        .addText(text => {
-            text.setValue(existingSubclass?.name || '')
-                .setPlaceholder('Enter subclass name')
-                .onChange(value => {
-                    if (existingSubclass) existingSubclass.name = value;
-                });
         });
 
-    // Subclass Description
-    new Setting(modal.contentEl)
-        .setName('Description')
-        .setDesc('Brief description of the subclass and its strengths')
-        .addTextArea(text => {
-            text.setValue(existingSubclass?.description || '')
-                .setPlaceholder('Description of the subclass...')
-                .onChange(value => {
-                    if (existingSubclass) existingSubclass.description = value;
-                });
-            
-            const textEl = text.inputEl;
-            textEl.style.width = '100%';
-            textEl.style.height = '100px';
-        });
-
-    // Features section
-    const featuresContainer = modal.contentEl.createDiv('subclass-features');
-    featuresContainer.createEl('h3', { text: 'Subclass Features' });
-    featuresContainer.style.marginTop = '20px';
-    
-    const featuresList = featuresContainer.createDiv('features-list');
-    
-    // Function to add a feature row
-    const addFeatureRow = (feature?: {level: number, name: string, description: string}) => {
-        const featureRow = featuresList.createDiv('feature-row');
-        featureRow.style.display = 'flex';
-        featureRow.style.marginBottom = '10px';
-        featureRow.style.gap = '10px';
-        
-        // Level input
-        const levelInput = document.createElement('input');
-        levelInput.type = 'number';
-        levelInput.min = '1';
-        levelInput.max = '20';
-        levelInput.value = feature?.level?.toString() || '3';
-        levelInput.style.width = '60px';
-        levelInput.placeholder = 'Level';
-        featureRow.appendChild(levelInput);
-        
-        // Name input
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.value = feature?.name || '';
-        nameInput.style.flex = '1';
-        nameInput.placeholder = 'Feature name';
-        featureRow.appendChild(nameInput);
-        
-        // Description input
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.value = feature?.description || '';
-        descInput.style.flex = '2';
-        descInput.placeholder = 'Feature description';
-        featureRow.appendChild(descInput);
-        
-        // Delete button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '×';
-        deleteBtn.style.color = 'var(--text-error)';
-        deleteBtn.addEventListener('click', () => {
-            featureRow.remove();
-        });
-        featureRow.appendChild(deleteBtn);
-        
-        return { row: featureRow, levelInput, nameInput, descInput };
-    };
-    
-    // Add existing features or a default empty one
-    if (existingSubclass?.features && existingSubclass.features.length > 0) {
-        existingSubclass.features.forEach((feature: {level: number, name: string, description: string}) => {
-            addFeatureRow(feature);
-        });
-    } else {
-        addFeatureRow();
+        modal.open();
     }
-    
-    // Button to add more features
-    const addFeatureButton = featuresContainer.createEl('button', { text: 'Add Feature' });
-    addFeatureButton.style.marginTop = '10px';
-    addFeatureButton.addEventListener('click', () => {
-        addFeatureRow();
-    });
-
-    // Save Button
-    const buttonContainer = modal.contentEl.createDiv('button-container');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'flex-end';
-    buttonContainer.style.marginTop = '20px';
-    buttonContainer.style.gap = '10px';
-    
-    const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
-    cancelButton.addEventListener('click', () => {
-        modal.close();
-    });
-    
-    const saveButton = buttonContainer.createEl('button', { 
-        text: 'Save Subclass',
-        cls: 'mod-cta'
-    });
-    
-    saveButton.addEventListener('click', async () => {
-        const nameInput = modal.contentEl.querySelector('input[placeholder="Enter subclass name"]') as HTMLInputElement;
-        const descriptionInput = modal.contentEl.querySelector('textarea[placeholder="Description of the subclass..."]') as HTMLTextAreaElement;
-        
-        if (!nameInput.value.trim()) {
-            new Notice('Subclass name is required');
-            return;
-        }
-        
-        // Collect all feature data
-        const features: {level: number, name: string, description: string}[] = [];
-        
-        const featureRows = featuresList.querySelectorAll('.feature-row');
-        featureRows.forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            if (inputs[1].value.trim()) { // Only add if name is not empty
-                features.push({
-                    level: parseInt(inputs[0].value, 10) || 3,
-                    name: inputs[1].value.trim(),
-                    description: inputs[2].value.trim() || 'No description provided.'
-                });
-            }
-        });
-        
-        // Sort features by level
-        features.sort((a, b) => a.level - b.level);
-        
-        // Create or update the subclass
-        const subclass = {
-            name: nameInput.value.trim(),
-            description: descriptionInput.value.trim() || 'No description provided.',
-            features: features
-        };
-        
-        // Ensure the class has a subclasses array
-        if (!characterClass.subclasses) {
-            characterClass.subclasses = [];
-        }
-        
-        if (existingSubclass && subclassIndex !== undefined) {
-            // Update existing subclass
-            characterClass.subclasses[subclassIndex] = subclass;
-        } else {
-            // Add new subclass
-            characterClass.subclasses.push(subclass);
-        }
-        
-        // Update the class in settings
-        this.plugin.settings.classes[classIndex] = characterClass;
-        
-        // Save settings and refresh display
-        await this.plugin.saveSettings();
-        this.display();
-        modal.close();
-    });
-
-    modal.open();
-}
 
     /**
      * Open Race Modal for Adding/Editing
@@ -864,60 +724,73 @@ private openSubclassModal(
     private openRaceModal(existingRace?: Race, index?: number) {
         const modal = new Modal(this.app);
         modal.titleEl.setText(existingRace ? `Edit ${existingRace.name} Race` : 'Add New Race');
-    
+
         // Create a copy of the race or initialize a new one
-        let raceToEdit: Race = existingRace ? {...existingRace} : {
+        let raceToEdit: Race = existingRace ? {
+            ...existingRace
+        } : {
             name: '',
-            abilityScoreAdjustments: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+            abilityScoreAdjustments: {
+                str: 0,
+                dex: 0,
+                con: 0,
+                int: 0,
+                wis: 0,
+                cha: 0
+            },
             traits: [],
             size: "Medium",
             speed: 30,
             languages: ["Common"]
         };
-    
+
         // Race Name
         new Setting(modal.contentEl)
-            .setName('Race Name')
-            .addText(text => {
-                text.setValue(raceToEdit.name || '')
-                    .onChange(value => {
-                        raceToEdit.name = value;
-                    });
+        .setName('Race Name')
+        .addText(text => {
+            text.setValue(raceToEdit.name || '')
+            .onChange(value => {
+                raceToEdit.name = value;
             });
-    
+        });
+
         // Ability Score Adjustments
         const abilities: AbilityName[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
         abilities.forEach(ability => {
             new Setting(modal.contentEl)
-                .setName(`${ability.toUpperCase()} Adjustment`)
-                .addSlider(slider => {
-                    slider
-                        .setLimits(-2, 2, 1)
-                        .setValue(raceToEdit.abilityScoreAdjustments[ability] || 0)
-                        .setDynamicTooltip()
-                        .onChange(value => {
-                            raceToEdit.abilityScoreAdjustments[ability] = value;
-                        });
+            .setName(`${ability.toUpperCase()} Adjustment`)
+            .addSlider(slider => {
+                slider
+                .setLimits(-2, 2, 1)
+                .setValue(raceToEdit.abilityScoreAdjustments[ability] || 0)
+                .setDynamicTooltip()
+                .onChange(value => {
+                    raceToEdit.abilityScoreAdjustments[ability] = value;
                 });
+            });
         });
 
         // Traits
         const traitsContainer = modal.contentEl.createDiv('race-traits');
-        traitsContainer.createEl('h3', { text: 'Racial Traits' });
+        traitsContainer.createEl('h3', {
+            text: 'Racial Traits'
+        });
 
         // Trait list
         const traitsList = traitsContainer.createEl('ul');
-        (existingRace?.traits || []).forEach((trait, traitIndex) => {
+        (raceToEdit.traits || []).forEach((trait, traitIndex) => {
             const traitItem = traitsList.createEl('li');
-            traitItem.createEl('span', { text: trait });
-            traitItem.createEl('button', { 
+            traitItem.createEl('span', {
+                text: trait
+            });
+            traitItem.createEl('button', {
                 text: '×',
-                attr: { style: 'margin-left: 10px; color: var(--text-error);' }
-            }).addEventListener('click', () => {
-                if (existingRace) {
-                    existingRace.traits.splice(traitIndex, 1);
-                    traitItem.remove();
+                attr: {
+                    style: 'margin-left: 10px; color: var(--text-error);'
                 }
+            }).addEventListener('click', () => {
+                raceToEdit.traits.splice(traitIndex, 1);
+                traitItem.remove();
             });
         });
         // Add trait input
@@ -925,36 +798,35 @@ private openSubclassModal(
         newTraitContainer.style.display = 'flex';
         newTraitContainer.style.gap = '10px';
         newTraitContainer.style.marginTop = '10px';
-        
-        const traitInput = newTraitContainer.createEl('input', { 
-            type: 'text', 
-            placeholder: 'Add a new trait' 
+
+        const traitInput = newTraitContainer.createEl('input', {
+            type: 'text',
+            placeholder: 'Add a new trait'
         });
         traitInput.style.flex = '1';
-        
-        const addTraitButton = newTraitContainer.createEl('button', { text: 'Add Trait' });
-        
+
+        const addTraitButton = newTraitContainer.createEl('button', {
+            text: 'Add Trait'
+        });
+
         addTraitButton.addEventListener('click', () => {
             const newTrait = traitInput.value.trim();
             if (newTrait) {
-                if (!existingRace) {
-                    existingRace = {
-                        name: '',
-                        abilityScoreAdjustments: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
-                        traits: [],
-                        size: "Medium",
-                        speed: 30,
-                        languages: ["Common"]
-                    };
-                }
-                existingRace.traits.push(newTrait);
+                raceToEdit.traits.push(newTrait);
                 const traitItem = traitsList.createEl('li');
-                traitItem.createEl('span', { text: newTrait });
-                traitItem.createEl('button', { 
+                traitItem.createEl('span', {
+                    text: newTrait
+                });
+                traitItem.createEl('button', {
                     text: '×',
-                    attr: { style: 'margin-left: 10px; color: var(--text-error);' }
+                    attr: {
+                        style: 'margin-left: 10px; color: var(--text-error);'
+                    }
                 }).addEventListener('click', () => {
-                    existingRace!.traits.splice(existingRace!.traits.length - 1, 1);
+                    const idx = raceToEdit.traits.indexOf(newTrait);
+                    if (idx !== -1) {
+                        raceToEdit.traits.splice(idx, 1);
+                    }
                     traitItem.remove();
                 });
                 traitInput.value = '';
@@ -963,55 +835,58 @@ private openSubclassModal(
 
         // Race Size
         new Setting(modal.contentEl)
-            .setName('Size')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('Small', 'Small')
-                    .addOption('Medium', 'Medium')
-                    .addOption('Large', 'Large')
-                    .setValue(existingRace?.size || 'Medium')
-                    .onChange(value => {
-                        if (existingRace) existingRace.size = value as "Small" | "Medium" | "Large" | "Tiny" | "Huge" | "Gargantuan";
-                    });
+        .setName('Size')
+        .addDropdown(dropdown => {
+            dropdown
+            .addOption('Small', 'Small')
+            .addOption('Medium', 'Medium')
+            .addOption('Large', 'Large')
+            .setValue(raceToEdit.size || 'Medium')
+			            .setValue(raceToEdit.size || 'Medium')
+            .onChange(value => {
+                raceToEdit.size = value as "Small" | "Medium" | "Large" | "Tiny" | "Huge" | "Gargantuan";
             });
+        });
 
         // Race Speed
         new Setting(modal.contentEl)
-            .setName('Speed')
-            .addSlider(slider => {
-                slider
-                    .setLimits(20, 40, 5)
-                    .setValue(existingRace?.speed || 30)
-                    .setDynamicTooltip()
-                    .onChange(value => {
-                        if (existingRace) existingRace.speed = value;
-                    });
+        .setName('Speed')
+        .addSlider(slider => {
+            slider
+            .setLimits(20, 40, 5)
+            .setValue(raceToEdit.speed || 30)
+            .setDynamicTooltip()
+            .onChange(value => {
+                raceToEdit.speed = value;
             });
+        });
 
         // Languages
         const languagesContainer = modal.contentEl.createDiv('race-languages');
-        languagesContainer.createEl('h3', { text: 'Languages' });
-        
-        const commonLanguages = ['Common', 'Dwarvish', 'Elvish', 'Giant', 'Gnomish', 'Goblin', 
-            'Halfling', 'Orc', 'Abyssal', 'Celestial', 'Draconic', 'Deep Speech', 
+        languagesContainer.createEl('h3', {
+            text: 'Languages'
+        });
+
+        const commonLanguages = ['Common', 'Dwarvish', 'Elvish', 'Giant', 'Gnomish', 'Goblin',
+            'Halfling', 'Orc', 'Abyssal', 'Celestial', 'Draconic', 'Deep Speech',
             'Infernal', 'Primordial', 'Sylvan', 'Undercommon'];
-        
+
         const languagesList = languagesContainer.createDiv('languages-list');
         languagesList.style.display = 'grid';
         languagesList.style.gridTemplateColumns = 'repeat(3, 1fr)';
         languagesList.style.gap = '5px';
-        
+
         commonLanguages.forEach(language => {
             const languageCheck = languagesList.createDiv('language-check');
             languageCheck.style.display = 'flex';
             languageCheck.style.alignItems = 'center';
-            
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.checked = existingRace?.languages.includes(language) || false;
+            checkbox.checked = raceToEdit.languages.includes(language) || false;
             checkbox.id = `lang-${language}`;
             languageCheck.appendChild(checkbox);
-            
+
             const label = document.createElement('label');
             label.textContent = language;
             label.htmlFor = `lang-${language}`;
@@ -1019,18 +894,27 @@ private openSubclassModal(
             languageCheck.appendChild(label);
         });
 
-    // Save Button
-    const footerEl = modal.contentEl.createDiv();
-    const footerButtons = new Setting(footerEl);
-    footerButtons.addButton(btn => {
-        btn.setButtonText('Save')
+        // Save Button
+        const footerEl = modal.contentEl.createDiv();
+        const footerButtons = new Setting(footerEl);
+        footerButtons.addButton(btn => {
+            btn.setButtonText('Save')
             .setCta()
-            .onClick(async () => {
+            .onClick(async() => {
                 // Validate
                 if (!raceToEdit.name || raceToEdit.name.trim() === '') {
                     new Notice('Race name is required');
                     return;
                 }
+
+                // Update languages
+                raceToEdit.languages = [];
+                commonLanguages.forEach(language => {
+                    const checkbox = document.getElementById(`lang-${language}`) as HTMLInputElement;
+                    if (checkbox && checkbox.checked) {
+                        raceToEdit.languages.push(language);
+                    }
+                });
 
                 // Save the race
                 if (index !== undefined) {
@@ -1045,19 +929,19 @@ private openSubclassModal(
                 modal.close();
                 this.display();
             });
-    });
+        });
 
-    footerButtons.addButton(btn => {
-        btn.setButtonText('Cancel')
+        footerButtons.addButton(btn => {
+            btn.setButtonText('Cancel')
             .onClick(() => {
                 modal.close();
             });
-    });
+        });
 
-    modal.open();
-}
-
-    /**
+        modal.open();
+    }
+	
+	/**
      * Open Class Modal for Adding/Editing
      */
     private openClassModal(existingClass?: CharacterClass, index?: number) {
@@ -1066,9 +950,9 @@ private openSubclassModal(
         
         // Ensure full width and proper responsiveness
         modal.contentEl.style.width = '100%';
-        modal.contentEl.style.maxWidth = '1000px';  // Increased max-width
-        modal.contentEl.style.margin = '0 auto';    // Center the modal
-        modal.contentEl.style.padding = '0 20px';   // Add some side padding
+        modal.contentEl.style.maxWidth = '1000px'; // Increased max-width
+        modal.contentEl.style.margin = '0 auto'; // Center the modal
+        modal.contentEl.style.padding = '0 20px'; // Add some side padding
         modal.contentEl.style.boxSizing = 'border-box';
         
         // Create a scrollable container
@@ -1092,7 +976,7 @@ private openSubclassModal(
             },
             features: []
         };
-    
+
         // Basic info row with flexible layout
         const basicRow = modalScrollContainer.createDiv('basic-class-info-row');
         basicRow.style.display = 'flex';
@@ -1155,7 +1039,7 @@ private openSubclassModal(
                         classToEdit.primaryAbility = value as AbilityName;
                     });
             });
-    
+
         // Spellcasting
         const spellcastingContainer = basicRow.createDiv('spellcasting-container');
         const spellcasterCheck = spellcastingContainer.createEl('div', { cls: 'setting-item' });
@@ -1298,8 +1182,8 @@ private openSubclassModal(
             // Ensure class name is updated in the object
             classToEdit.name = nameInput.value.trim();
             
-            // Get all the form values - make sure these are captured from the UI
-            this.captureFormValuesForClass(classToEdit, classTabContent);
+            // Get all form values based on active tab
+            this.captureClassFormValues(classToEdit, activeClassTab, classTabContent);
             
             // Save the class
             if (index !== undefined) {
@@ -1325,35 +1209,290 @@ private openSubclassModal(
     
         modal.open();
     }
-    
-    // Helper method to ensure we get all the form values
-    private captureFormValuesForClass(classToEdit: CharacterClass, formContainer: HTMLElement) {
-        // This would capture any values from tabs that might not be currently visible
+	
+	/**
+     * Open Subclass Modal for Adding/Editing
+     */
+    private openSubclassModal(
+        characterClass: CharacterClass, 
+        classIndex: number, 
+        existingSubclass?: { name: string; description: string; features: { level: number; name: string; description: string; }[] },
+        subclassIndex?: number
+    ) {
+        const modal = new Modal(this.app);
+        modal.titleEl.setText(existingSubclass ? `Edit ${existingSubclass.name} Subclass` : `Add New Subclass for ${characterClass.name}`);
+        modal.contentEl.style.width = '500px';
+
+        // Subclass Name
+        new Setting(modal.contentEl)
+            .setName('Subclass Name')
+            .addText(text => {
+                text.setValue(existingSubclass?.name || '')
+                    .setPlaceholder('Enter subclass name')
+                    .onChange(value => {
+                        if (existingSubclass) existingSubclass.name = value;
+                    });
+            });
+
+        // Subclass Description
+        new Setting(modal.contentEl)
+            .setName('Description')
+            .setDesc('Brief description of the subclass and its strengths')
+            .addTextArea(text => {
+                text.setValue(existingSubclass?.description || '')
+                    .setPlaceholder('Description of the subclass...')
+                    .onChange(value => {
+                        if (existingSubclass) existingSubclass.description = value;
+                    });
+                
+                const textEl = text.inputEl;
+                textEl.style.width = '100%';
+                textEl.style.height = '100px';
+            });
+
+        // Features section
+        const featuresContainer = modal.contentEl.createDiv('subclass-features');
+        featuresContainer.createEl('h3', { text: 'Subclass Features' });
+        featuresContainer.style.marginTop = '20px';
         
-        // Example: 
-        // Saving Throws
-        classToEdit.savingThrows = [];
-        const abilities: AbilityName[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-        abilities.forEach(ability => {
-            const checkbox = formContainer.querySelector(`#save-${ability}`) as HTMLInputElement;
-            if (checkbox && checkbox.checked) {
-                classToEdit.savingThrows.push(ability);
-            }
-        });
+        const featuresList = featuresContainer.createDiv('features-list');
         
-        // Skills
-        const skillChoicesInput = formContainer.querySelector('#skill-choices') as HTMLInputElement;
-        if (skillChoicesInput) {
-            classToEdit.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
+        // Function to add a feature row
+        const addFeatureRow = (feature?: {level: number, name: string, description: string}) => {
+            const featureRow = featuresList.createDiv('feature-row');
+            featureRow.style.display = 'flex';
+            featureRow.style.marginBottom = '10px';
+            featureRow.style.gap = '10px';
+            
+            // Level input
+            const levelInput = document.createElement('input');
+            levelInput.type = 'number';
+            levelInput.min = '1';
+            levelInput.max = '20';
+            levelInput.value = feature?.level?.toString() || '3';
+            levelInput.style.width = '60px';
+            levelInput.placeholder = 'Level';
+            featureRow.appendChild(levelInput);
+            
+            // Name input
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = feature?.name || '';
+            nameInput.style.flex = '1';
+            nameInput.placeholder = 'Feature name';
+            featureRow.appendChild(nameInput);
+            
+            // Description input
+            const descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.value = feature?.description || '';
+            descInput.style.flex = '2';
+            descInput.placeholder = 'Feature description';
+            featureRow.appendChild(descInput);
+            
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '×';
+            deleteBtn.style.color = 'var(--text-error)';
+            deleteBtn.addEventListener('click', () => {
+                featureRow.remove();
+            });
+            featureRow.appendChild(deleteBtn);
+            
+            return { row: featureRow, levelInput, nameInput, descInput };
+        };
+        
+        // Add existing features or a default empty one
+        if (existingSubclass?.features && existingSubclass.features.length > 0) {
+            existingSubclass.features.forEach(feature => {
+                addFeatureRow(feature);
+            });
+        } else {
+            addFeatureRow();
         }
         
-        // Other form elements would be captured similarly
+        // Button to add more features
+        const addFeatureButton = featuresContainer.createEl('button', { text: 'Add Feature' });
+        addFeatureButton.style.marginTop = '10px';
+        addFeatureButton.addEventListener('click', () => {
+            addFeatureRow();
+        });
+
+        // Save Button
+        const buttonContainer = modal.contentEl.createDiv('button-container');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'flex-end';
+        buttonContainer.style.marginTop = '20px';
+        buttonContainer.style.gap = '10px';
+        
+        const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
+        cancelButton.addEventListener('click', () => {
+            modal.close();
+        });
+        
+        const saveButton = buttonContainer.createEl('button', { 
+            text: 'Save Subclass',
+            cls: 'mod-cta'
+        });
+        
+        saveButton.addEventListener('click', async () => {
+            const nameInput = modal.contentEl.querySelector('input[placeholder="Enter subclass name"]') as HTMLInputElement;
+            const descriptionInput = modal.contentEl.querySelector('textarea[placeholder="Description of the subclass..."]') as HTMLTextAreaElement;
+            
+            if (!nameInput.value.trim()) {
+                new Notice('Subclass name is required');
+                return;
+            }
+            
+            // Collect all feature data
+            const features: Array<{level: number, name: string, description: string}> = [];
+            
+            const featureRows = featuresList.querySelectorAll('.feature-row');
+            featureRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[1].value.trim()) { // Only add if name is not empty
+                    features.push({
+                        level: parseInt(inputs[0].value, 10) || 3,
+                        name: inputs[1].value.trim(),
+                        description: inputs[2].value.trim() || 'No description provided.'
+                    });
+                }
+            });
+            
+            // Sort features by level
+            features.sort((a, b) => a.level - b.level);
+            
+            // Create or update the subclass
+            const subclass = {
+                name: nameInput.value.trim(),
+                description: descriptionInput.value.trim() || 'No description provided.',
+                features: features
+            };
+            
+            // Ensure the class has a subclasses array
+            if (!characterClass.subclasses) {
+                characterClass.subclasses = [];
+            }
+            
+            if (existingSubclass && subclassIndex !== undefined) {
+                // Update existing subclass
+                characterClass.subclasses[subclassIndex] = subclass;
+            } else {
+                // Add new subclass
+                characterClass.subclasses.push(subclass);
+            }
+            
+            // Update the class in settings
+            this.plugin.settings.classes[classIndex] = characterClass;
+            
+            // Save settings and refresh display
+            await this.plugin.saveSettings();
+            this.display();
+            modal.close();
+        });
+
+        modal.open();
+    }
+
+    /**
+     * Capture form values for class based on the active tab
+     */
+    private captureClassFormValues(classToEdit: CharacterClass, activeTab: string, formContainer: HTMLElement) {
+        switch (activeTab) {
+            case 'saves':
+                // Saving Throws
+                classToEdit.savingThrows = [];
+                const abilities: AbilityName[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+                abilities.forEach(ability => {
+                    const checkbox = formContainer.querySelector(`#save-${ability}`) as HTMLInputElement;
+                    if (checkbox && checkbox.checked) {
+                        classToEdit.savingThrows.push(ability);
+                    }
+                });
+                break;
+                
+            case 'skills':
+                // Skills
+                classToEdit.skills = [];
+                const skillChoicesInput = formContainer.querySelector('#skill-choices') as HTMLInputElement;
+                if (skillChoicesInput) {
+                    classToEdit.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
+                }
+                
+                // Collect selected skills
+                const allSkills = [
+                    'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception', 
+                    'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine', 
+                    'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion', 
+                    'Sleight of Hand', 'Stealth', 'Survival'
+                ];
+                
+                allSkills.forEach(skill => {
+                    const skillCheckbox = formContainer.querySelector(`#skill-${skill}`) as HTMLInputElement;
+                    if (skillCheckbox && skillCheckbox.checked) {
+                        classToEdit.skills.push(skill);
+                    }
+                });
+                break;
+                
+            case 'features':
+                // Features
+                classToEdit.features = [];
+                const featureRows = formContainer.querySelectorAll('.feature-row');
+                featureRows.forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    if (inputs[1].value.trim()) {
+                        classToEdit.features.push({
+                            level: parseInt(inputs[0].value, 10) || 1,
+                            name: inputs[1].value.trim(),
+                            description: inputs[2].value.trim() || 'No description provided.'
+                        });
+                    }
+                });
+                break;
+                
+            case 'proficiencies':
+                // Proficiencies
+                classToEdit.proficiencies = {
+                    weapons: [],
+                    armor: [],
+                    tools: []
+                };
+                
+                // Collect weapon proficiencies
+                const weaponInputs = formContainer.querySelectorAll('input[name="weapon-prof"]');
+                weaponInputs.forEach(input => {
+                    const value = (input as HTMLInputElement).value.trim();
+                    if (value) {
+                        classToEdit.proficiencies.weapons.push(value);
+                    }
+                });
+                
+                // Collect armor proficiencies
+                const armorInputs = formContainer.querySelectorAll('input[name="armor-prof"]');
+                armorInputs.forEach(input => {
+                    const value = (input as HTMLInputElement).value.trim();
+                    if (value) {
+                        classToEdit.proficiencies.armor.push(value);
+                    }
+                });
+                
+                // Collect tool proficiencies
+                const toolInputs = formContainer.querySelectorAll('input[name="tool-prof"]');
+                toolInputs.forEach(input => {
+                    const value = (input as HTMLInputElement).value.trim();
+                    if (value) {
+                        classToEdit.proficiencies.tools.push(value);
+                    }
+                });
+                break;
+        }
     }
 
     /**
      * Render Saving Throws Tab
      */
-    private renderSavingThrowsTab(container: HTMLElement, existingClass?: CharacterClass) {
+    private renderSavingThrowsTab(container: HTMLElement, existingClass: CharacterClass) {
         container.createEl('h3', { text: 'Saving Throw Proficiencies' });
         container.createEl('p', { 
             text: 'Select which ability saving throws this class is proficient in (typically two).',
@@ -1390,7 +1529,7 @@ private openSubclassModal(
     /**
      * Render Skills Tab
      */
-    private renderSkillsTab(container: HTMLElement, existingClass?: CharacterClass) {
+    private renderSkillsTab(container: HTMLElement, existingClass: CharacterClass) {
         container.createEl('h3', { text: 'Class Skills' });
         container.createEl('p', { 
             text: 'Select which skills this class can choose proficiencies from.',
@@ -1449,7 +1588,7 @@ private openSubclassModal(
     /**
      * Render Features Tab
      */
-    private renderFeaturesTab(container: HTMLElement, existingClass?: CharacterClass) {
+    private renderFeaturesTab(container: HTMLElement, existingClass: CharacterClass) {
         container.createEl('h3', { text: 'Class Features' });
         container.createEl('p', { 
             text: 'Define the features this class gains as it levels up.',
@@ -1524,7 +1663,7 @@ private openSubclassModal(
     /**
      * Render Proficiencies Tab
      */
-    private renderProficienciesTab(container: HTMLElement, existingClass?: CharacterClass) {
+    private renderProficienciesTab(container: HTMLElement, existingClass: CharacterClass) {
         container.createEl('h3', { text: 'Proficiencies' });
         container.createEl('p', { 
             text: 'Define what equipment this class is proficient with.',

@@ -229,6 +229,29 @@ export const defaultRaces: Race[] = [
 
 export const defaultClasses: CharacterClass[] = [
                 { 
+                    name: "Artificer", 
+                    hitDie: 8, 
+                    primaryAbility: "int", 
+                    savingThrows: ["con", "int"], 
+                    skills: ["Arcana", "History", "Investigation", "Medicine", "Nature", "Perception", "Sleight of Hand"],
+                    skillChoices: 2,
+                    proficiencies: {
+                        weapons: ["Simple weapons", "Firearms"],
+                        armor: ["Light armor", "Medium armor", "Shields"],
+                        tools: ["Thieves' tools", "Tinker's tools", "One type of artisan's tools of your choice"]
+                    },
+                    spellcasting: {
+                        ability: "int",
+                        prepareSpells: true
+                    },
+                    features: [
+                        { level: 1, name: "Magical Tinkering", description: "You have learned how to invest a spark of magic into mundane objects." },
+                        { level: 1, name: "Spellcasting", description: "You have studied the workings of magic and how to cast spells, channeling the magic through objects." },
+                        { level: 2, name: "Infuse Item", description: "You gain the ability to imbue mundane items with certain magical infusions." },
+                        { level: 3, name: "Artificer Specialist", description: "You choose the type of specialist you are: Alchemist, Artillerist, Battle Smith, or Armorer." }
+                    ]
+                },
+                { 
                     name: "Barbarian", 
                     hitDie: 12, 
                     primaryAbility: "str", 
@@ -269,6 +292,25 @@ export const defaultClasses: CharacterClass[] = [
                         { level: 1, name: "Spellcasting", description: "You have learned to untangle and reshape the fabric of reality in harmony with your wishes and music." },
                         { level: 2, name: "Jack of All Trades", description: "You can add half your proficiency bonus, rounded down, to any ability check you make that doesn't already include your proficiency bonus." },
                         { level: 2, name: "Song of Rest", description: "You can use soothing music or oration to help revitalize your wounded allies during a short rest." }
+                    ]
+                },
+                { 
+                    name: "Blood Hunter", 
+                    hitDie: 10, 
+                    primaryAbility: "str", 
+                    savingThrows: ["dex", "int"], 
+                    skills: ["Acrobatics", "Arcana", "Athletics", "History", "Insight", "Investigation", "Religion", "Survival"],
+                    skillChoices: 3,
+                    proficiencies: {
+                        weapons: ["Simple weapons", "Martial weapons"],
+                        armor: ["Light armor", "Medium armor", "Shields"],
+                        tools: ["Alchemist's supplies"]
+                    },
+                    features: [
+                        { level: 1, name: "Hunter's Bane", description: "You can track certain types of creatures with unnatural efficiency." },
+                        { level: 1, name: "Blood Maledict", description: "You gain the ability to channel your vital essence into curses against your foes." },
+                        { level: 2, name: "Crimson Rite", description: "You can imbue your weapon strikes with elemental energy." },
+                        { level: 3, name: "Blood Hunter Order", description: "You commit to an order of blood hunter martial traditions." }
                     ]
                 },
                 { 
@@ -493,184 +535,6 @@ export const defaultClasses: CharacterClass[] = [
                         { level: 1, name: "Spellcasting", description: "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power." },
                         { level: 2, name: "Arcane Tradition", description: "You choose an arcane tradition, shaping your practice of magic through one of eight schools." },
                         { level: 3, name: "Arcane Tradition Feature", description: "Your arcane tradition grants you additional abilities." }
-                    ]
-                },
-                // Classes from other sources
-                { 
-                    name: "Artificer", 
-                    hitDie: 8, 
-                    primaryAbility: "int", 
-                    savingThrows: ["con", "int"], 
-                    skills: ["Arcana", "History", "Investigation", "Medicine", "Nature", "Perception", "Sleight of Hand"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Simple weapons", "Firearms"],
-                        armor: ["Light armor", "Medium armor", "Shields"],
-                        tools: ["Thieves' tools", "Tinker's tools", "One type of artisan's tools of your choice"]
-                    },
-                    spellcasting: {
-                        ability: "int",
-                        prepareSpells: true
-                    },
-                    features: [
-                        { level: 1, name: "Magical Tinkering", description: "You have learned how to invest a spark of magic into mundane objects." },
-                        { level: 1, name: "Spellcasting", description: "You have studied the workings of magic and how to cast spells, channeling the magic through objects." },
-                        { level: 2, name: "Infuse Item", description: "You gain the ability to imbue mundane items with certain magical infusions." },
-                        { level: 3, name: "Artificer Specialist", description: "You choose the type of specialist you are: Alchemist, Artillerist, Battle Smith, or Armorer." }
-                    ]
-                },
-                { 
-                    name: "Blood Hunter", 
-                    hitDie: 10, 
-                    primaryAbility: "str", 
-                    savingThrows: ["dex", "int"], 
-                    skills: ["Acrobatics", "Arcana", "Athletics", "History", "Insight", "Investigation", "Religion", "Survival"],
-                    skillChoices: 3,
-                    proficiencies: {
-                        weapons: ["Simple weapons", "Martial weapons"],
-                        armor: ["Light armor", "Medium armor", "Shields"],
-                        tools: ["Alchemist's supplies"]
-                    },
-                    features: [
-                        { level: 1, name: "Hunter's Bane", description: "You can track certain types of creatures with unnatural efficiency." },
-                        { level: 1, name: "Blood Maledict", description: "You gain the ability to channel your vital essence into curses against your foes." },
-                        { level: 2, name: "Crimson Rite", description: "You can imbue your weapon strikes with elemental energy." },
-                        { level: 3, name: "Blood Hunter Order", description: "You commit to an order of blood hunter martial traditions." }
-                    ]
-                },
-                { 
-                    name: "Echo Knight", 
-                    hitDie: 10, 
-                    primaryAbility: "str", 
-                    savingThrows: ["str", "con"], 
-                    skills: ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Simple weapons", "Martial weapons"],
-                        armor: ["All armor", "Shields"],
-                        tools: []
-                    },
-                    features: [
-                        { level: 1, name: "Fighting Style", description: "You adopt a style of fighting as your specialty." },
-                        { level: 1, name: "Second Wind", description: "You can use a bonus action to regain hit points." },
-                        { level: 3, name: "Manifest Echo", description: "You can use a bonus action to magically manifest an echo of yourself." },
-                        { level: 3, name: "Unleash Incarnation", description: "You can heighten your echo's fury." }
-                    ]
-                },
-                { 
-                    name: "Chronurgy Wizard", 
-                    hitDie: 6, 
-                    primaryAbility: "int", 
-                    savingThrows: ["int", "wis"], 
-                    skills: ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
-                        armor: [],
-                        tools: []
-                    },
-                    spellcasting: {
-                        ability: "int",
-                        cantripsKnown: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-                        prepareSpells: true
-                    },
-                    features: [
-                        { level: 1, name: "Arcane Recovery", description: "You have learned to regain some of your magical energy by studying your spellbook." },
-                        { level: 1, name: "Spellcasting", description: "You have a spellbook containing spells that show the first glimmerings of your true power." },
-                        { level: 2, name: "Chronurgy Magic", description: "You focus your studies on time manipulation, rewinding the flow of time to safeguard yourself and your allies." },
-                        { level: 2, name: "Temporal Awareness", description: "You can add your Intelligence modifier to your initiative rolls." }
-                    ]
-                },
-                { 
-                    name: "Graviturgy Wizard", 
-                    hitDie: 6, 
-                    primaryAbility: "int", 
-                    savingThrows: ["int", "wis"], 
-                    skills: ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
-                        armor: [],
-                        tools: []
-                    },
-                    spellcasting: {
-                        ability: "int",
-                        cantripsKnown: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-                        prepareSpells: true
-                    },
-                    features: [
-                        { level: 1, name: "Arcane Recovery", description: "You have learned to regain some of your magical energy by studying your spellbook." },
-                        { level: 1, name: "Spellcasting", description: "You have a spellbook containing spells that show the first glimmerings of your true power." },
-                        { level: 2, name: "Graviturgy Magic", description: "Your fascination with gravity has led you to learn spells that manipulate it." },
-                        { level: 2, name: "Adjust Density", description: "As an action, you can magically alter the weight of a creature or object." }
-                    ]
-                },
-                { 
-                    name: "College of Eloquence Bard", 
-                    hitDie: 8, 
-                    primaryAbility: "cha", 
-                    savingThrows: ["dex", "cha"], 
-                    skills: ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"],
-                    skillChoices: 3,
-                    proficiencies: {
-                        weapons: ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
-                        armor: ["Light armor"],
-                        tools: ["Three musical instruments of your choice"]
-                    },
-                    spellcasting: {
-                        ability: "cha",
-                        cantripsKnown: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                        spellsKnown: [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22]
-                    },
-                    features: [
-                        { level: 1, name: "Bardic Inspiration", description: "You can inspire others through stirring words or music." },
-                        { level: 1, name: "Spellcasting", description: "You have learned to untangle and reshape the fabric of reality." },
-                        { level: 3, name: "Silver Tongue", description: "You are a master at saying the right thing at the right time." },
-                        { level: 3, name: "Unsettling Words", description: "You can use your bardic inspiration to undermine someone else's confidence." }
-                    ]
-                },
-                { 
-                    name: "Circle of Stars Druid", 
-                    hitDie: 8, 
-                    primaryAbility: "wis", 
-                    savingThrows: ["int", "wis"], 
-                    skills: ["Arcana", "Animal Handling", "Insight", "Medicine", "Nature", "Perception", "Religion", "Survival"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Clubs", "Daggers", "Darts", "Javelins", "Maces", "Quarterstaffs", "Scimitars", "Sickles", "Slings", "Spears"],
-                        armor: ["Light armor", "Medium armor", "Shields"],
-                        tools: ["Herbalism kit"]
-                    },
-                    spellcasting: {
-                        ability: "wis",
-                        cantripsKnown: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                        prepareSpells: true
-                    },
-                    features: [
-                        { level: 1, name: "Druidic", description: "You know Druidic, the secret language of druids." },
-                        { level: 1, name: "Spellcasting", description: "Drawing on the divine essence of nature itself, you can cast spells." },
-                        { level: 2, name: "Wild Shape", description: "You can use your action to magically assume the shape of a beast." },
-                        { level: 2, name: "Star Map", description: "You've created a star map, a mystical chart to track heavenly bodies." },
-                        { level: 2, name: "Starry Form", description: "You can expend a use of your Wild Shape to take on a starry form." }
-                    ]
-                },
-                { 
-                    name: "Path of Wild Magic Barbarian", 
-                    hitDie: 12, 
-                    primaryAbility: "str", 
-                    savingThrows: ["str", "con"], 
-                    skills: ["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"],
-                    skillChoices: 2,
-                    proficiencies: {
-                        weapons: ["Simple weapons", "Martial weapons"],
-                        armor: ["Light armor", "Medium armor", "Shields"],
-                        tools: []
-                    },
-                    features: [
-                        { level: 1, name: "Rage", description: "In battle, you fight with primal ferocity." },
-                        { level: 1, name: "Unarmored Defense", description: "While not wearing armor, your AC equals 10 + your Dexterity modifier + your Constitution modifier." },
-                        { level: 3, name: "Magic Awareness", description: "As an action, you can open your awareness to the presence of magic." },
-                        { level: 3, name: "Wild Surge", description: "When you enter your rage, roll on the Wild Magic table to determine the magical effect that manifests." }
                     ]
                 }
 ];

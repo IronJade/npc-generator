@@ -260,6 +260,29 @@ var defaultRaces = [
 ];
 var defaultClasses = [
   {
+    name: "Artificer",
+    hitDie: 8,
+    primaryAbility: "int",
+    savingThrows: ["con", "int"],
+    skills: ["Arcana", "History", "Investigation", "Medicine", "Nature", "Perception", "Sleight of Hand"],
+    skillChoices: 2,
+    proficiencies: {
+      weapons: ["Simple weapons", "Firearms"],
+      armor: ["Light armor", "Medium armor", "Shields"],
+      tools: ["Thieves' tools", "Tinker's tools", "One type of artisan's tools of your choice"]
+    },
+    spellcasting: {
+      ability: "int",
+      prepareSpells: true
+    },
+    features: [
+      { level: 1, name: "Magical Tinkering", description: "You have learned how to invest a spark of magic into mundane objects." },
+      { level: 1, name: "Spellcasting", description: "You have studied the workings of magic and how to cast spells, channeling the magic through objects." },
+      { level: 2, name: "Infuse Item", description: "You gain the ability to imbue mundane items with certain magical infusions." },
+      { level: 3, name: "Artificer Specialist", description: "You choose the type of specialist you are: Alchemist, Artillerist, Battle Smith, or Armorer." }
+    ]
+  },
+  {
     name: "Barbarian",
     hitDie: 12,
     primaryAbility: "str",
@@ -300,6 +323,25 @@ var defaultClasses = [
       { level: 1, name: "Spellcasting", description: "You have learned to untangle and reshape the fabric of reality in harmony with your wishes and music." },
       { level: 2, name: "Jack of All Trades", description: "You can add half your proficiency bonus, rounded down, to any ability check you make that doesn't already include your proficiency bonus." },
       { level: 2, name: "Song of Rest", description: "You can use soothing music or oration to help revitalize your wounded allies during a short rest." }
+    ]
+  },
+  {
+    name: "Blood Hunter",
+    hitDie: 10,
+    primaryAbility: "str",
+    savingThrows: ["dex", "int"],
+    skills: ["Acrobatics", "Arcana", "Athletics", "History", "Insight", "Investigation", "Religion", "Survival"],
+    skillChoices: 3,
+    proficiencies: {
+      weapons: ["Simple weapons", "Martial weapons"],
+      armor: ["Light armor", "Medium armor", "Shields"],
+      tools: ["Alchemist's supplies"]
+    },
+    features: [
+      { level: 1, name: "Hunter's Bane", description: "You can track certain types of creatures with unnatural efficiency." },
+      { level: 1, name: "Blood Maledict", description: "You gain the ability to channel your vital essence into curses against your foes." },
+      { level: 2, name: "Crimson Rite", description: "You can imbue your weapon strikes with elemental energy." },
+      { level: 3, name: "Blood Hunter Order", description: "You commit to an order of blood hunter martial traditions." }
     ]
   },
   {
@@ -524,184 +566,6 @@ var defaultClasses = [
       { level: 1, name: "Spellcasting", description: "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power." },
       { level: 2, name: "Arcane Tradition", description: "You choose an arcane tradition, shaping your practice of magic through one of eight schools." },
       { level: 3, name: "Arcane Tradition Feature", description: "Your arcane tradition grants you additional abilities." }
-    ]
-  },
-  // Classes from other sources
-  {
-    name: "Artificer",
-    hitDie: 8,
-    primaryAbility: "int",
-    savingThrows: ["con", "int"],
-    skills: ["Arcana", "History", "Investigation", "Medicine", "Nature", "Perception", "Sleight of Hand"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Simple weapons", "Firearms"],
-      armor: ["Light armor", "Medium armor", "Shields"],
-      tools: ["Thieves' tools", "Tinker's tools", "One type of artisan's tools of your choice"]
-    },
-    spellcasting: {
-      ability: "int",
-      prepareSpells: true
-    },
-    features: [
-      { level: 1, name: "Magical Tinkering", description: "You have learned how to invest a spark of magic into mundane objects." },
-      { level: 1, name: "Spellcasting", description: "You have studied the workings of magic and how to cast spells, channeling the magic through objects." },
-      { level: 2, name: "Infuse Item", description: "You gain the ability to imbue mundane items with certain magical infusions." },
-      { level: 3, name: "Artificer Specialist", description: "You choose the type of specialist you are: Alchemist, Artillerist, Battle Smith, or Armorer." }
-    ]
-  },
-  {
-    name: "Blood Hunter",
-    hitDie: 10,
-    primaryAbility: "str",
-    savingThrows: ["dex", "int"],
-    skills: ["Acrobatics", "Arcana", "Athletics", "History", "Insight", "Investigation", "Religion", "Survival"],
-    skillChoices: 3,
-    proficiencies: {
-      weapons: ["Simple weapons", "Martial weapons"],
-      armor: ["Light armor", "Medium armor", "Shields"],
-      tools: ["Alchemist's supplies"]
-    },
-    features: [
-      { level: 1, name: "Hunter's Bane", description: "You can track certain types of creatures with unnatural efficiency." },
-      { level: 1, name: "Blood Maledict", description: "You gain the ability to channel your vital essence into curses against your foes." },
-      { level: 2, name: "Crimson Rite", description: "You can imbue your weapon strikes with elemental energy." },
-      { level: 3, name: "Blood Hunter Order", description: "You commit to an order of blood hunter martial traditions." }
-    ]
-  },
-  {
-    name: "Echo Knight",
-    hitDie: 10,
-    primaryAbility: "str",
-    savingThrows: ["str", "con"],
-    skills: ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Simple weapons", "Martial weapons"],
-      armor: ["All armor", "Shields"],
-      tools: []
-    },
-    features: [
-      { level: 1, name: "Fighting Style", description: "You adopt a style of fighting as your specialty." },
-      { level: 1, name: "Second Wind", description: "You can use a bonus action to regain hit points." },
-      { level: 3, name: "Manifest Echo", description: "You can use a bonus action to magically manifest an echo of yourself." },
-      { level: 3, name: "Unleash Incarnation", description: "You can heighten your echo's fury." }
-    ]
-  },
-  {
-    name: "Chronurgy Wizard",
-    hitDie: 6,
-    primaryAbility: "int",
-    savingThrows: ["int", "wis"],
-    skills: ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
-      armor: [],
-      tools: []
-    },
-    spellcasting: {
-      ability: "int",
-      cantripsKnown: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-      prepareSpells: true
-    },
-    features: [
-      { level: 1, name: "Arcane Recovery", description: "You have learned to regain some of your magical energy by studying your spellbook." },
-      { level: 1, name: "Spellcasting", description: "You have a spellbook containing spells that show the first glimmerings of your true power." },
-      { level: 2, name: "Chronurgy Magic", description: "You focus your studies on time manipulation, rewinding the flow of time to safeguard yourself and your allies." },
-      { level: 2, name: "Temporal Awareness", description: "You can add your Intelligence modifier to your initiative rolls." }
-    ]
-  },
-  {
-    name: "Graviturgy Wizard",
-    hitDie: 6,
-    primaryAbility: "int",
-    savingThrows: ["int", "wis"],
-    skills: ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
-      armor: [],
-      tools: []
-    },
-    spellcasting: {
-      ability: "int",
-      cantripsKnown: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-      prepareSpells: true
-    },
-    features: [
-      { level: 1, name: "Arcane Recovery", description: "You have learned to regain some of your magical energy by studying your spellbook." },
-      { level: 1, name: "Spellcasting", description: "You have a spellbook containing spells that show the first glimmerings of your true power." },
-      { level: 2, name: "Graviturgy Magic", description: "Your fascination with gravity has led you to learn spells that manipulate it." },
-      { level: 2, name: "Adjust Density", description: "As an action, you can magically alter the weight of a creature or object." }
-    ]
-  },
-  {
-    name: "College of Eloquence Bard",
-    hitDie: 8,
-    primaryAbility: "cha",
-    savingThrows: ["dex", "cha"],
-    skills: ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"],
-    skillChoices: 3,
-    proficiencies: {
-      weapons: ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
-      armor: ["Light armor"],
-      tools: ["Three musical instruments of your choice"]
-    },
-    spellcasting: {
-      ability: "cha",
-      cantripsKnown: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      spellsKnown: [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22]
-    },
-    features: [
-      { level: 1, name: "Bardic Inspiration", description: "You can inspire others through stirring words or music." },
-      { level: 1, name: "Spellcasting", description: "You have learned to untangle and reshape the fabric of reality." },
-      { level: 3, name: "Silver Tongue", description: "You are a master at saying the right thing at the right time." },
-      { level: 3, name: "Unsettling Words", description: "You can use your bardic inspiration to undermine someone else's confidence." }
-    ]
-  },
-  {
-    name: "Circle of Stars Druid",
-    hitDie: 8,
-    primaryAbility: "wis",
-    savingThrows: ["int", "wis"],
-    skills: ["Arcana", "Animal Handling", "Insight", "Medicine", "Nature", "Perception", "Religion", "Survival"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Clubs", "Daggers", "Darts", "Javelins", "Maces", "Quarterstaffs", "Scimitars", "Sickles", "Slings", "Spears"],
-      armor: ["Light armor", "Medium armor", "Shields"],
-      tools: ["Herbalism kit"]
-    },
-    spellcasting: {
-      ability: "wis",
-      cantripsKnown: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-      prepareSpells: true
-    },
-    features: [
-      { level: 1, name: "Druidic", description: "You know Druidic, the secret language of druids." },
-      { level: 1, name: "Spellcasting", description: "Drawing on the divine essence of nature itself, you can cast spells." },
-      { level: 2, name: "Wild Shape", description: "You can use your action to magically assume the shape of a beast." },
-      { level: 2, name: "Star Map", description: "You've created a star map, a mystical chart to track heavenly bodies." },
-      { level: 2, name: "Starry Form", description: "You can expend a use of your Wild Shape to take on a starry form." }
-    ]
-  },
-  {
-    name: "Path of Wild Magic Barbarian",
-    hitDie: 12,
-    primaryAbility: "str",
-    savingThrows: ["str", "con"],
-    skills: ["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"],
-    skillChoices: 2,
-    proficiencies: {
-      weapons: ["Simple weapons", "Martial weapons"],
-      armor: ["Light armor", "Medium armor", "Shields"],
-      tools: []
-    },
-    features: [
-      { level: 1, name: "Rage", description: "In battle, you fight with primal ferocity." },
-      { level: 1, name: "Unarmored Defense", description: "While not wearing armor, your AC equals 10 + your Dexterity modifier + your Constitution modifier." },
-      { level: 3, name: "Magic Awareness", description: "As an action, you can open your awareness to the presence of magic." },
-      { level: 3, name: "Wild Surge", description: "When you enter your rage, roll on the Wild Magic table to determine the magical effect that manifests." }
     ]
   }
 ];
@@ -2795,16 +2659,22 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   }
   display() {
     this.containerEl.innerHTML = "";
-    const { containerEl } = this;
+    const {
+      containerEl
+    } = this;
     containerEl.empty();
     new import_obsidian2.Setting(containerEl).setHeading().setName("Basic Settings");
-    containerEl.createEl("h1", { text: "NPC Generator Settings" });
+    containerEl.createEl("h1", {
+      text: "NPC Generator Settings"
+    });
     const navContainer = containerEl.createDiv("nav-container");
     navContainer.style.display = "flex";
     navContainer.style.marginBottom = "20px";
     navContainer.style.borderBottom = "1px solid var(--background-modifier-border)";
     const createTab = (id, label) => {
-      const tab = navContainer.createEl("button", { text: label });
+      const tab = navContainer.createEl("button", {
+        text: label
+      });
       tab.style.padding = "8px 16px";
       tab.style.border = "none";
       tab.style.background = "none";
@@ -2835,6 +2705,11 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     switch (this.activeTab) {
       case "general":
         this.addStatblockFormatSection(contentContainer);
+        new import_obsidian2.Setting(contentContainer).setName("Restore Default Data").setDesc("Restore all default races, classes, and subclasses that may have been deleted.").addButton((button) => {
+          return button.setButtonText("Restore Defaults").setCta().onClick(async () => {
+            await this.restoreDefaultData();
+          });
+        });
         break;
       case "races":
         this.addRacesSection(contentContainer);
@@ -2846,23 +2721,23 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         this.addCustomParametersSection(contentContainer);
         break;
     }
-    new import_obsidian2.Setting(containerEl).setName("Restore Default Data").setDesc("Restore all default races, classes, and subclasses that may have been deleted.").addButton((button) => {
-      return button.setButtonText("Restore Defaults").setCta().onClick(async () => {
-        await this.restoreDefaultData();
-      });
-    });
   }
-  // Add the helper methods for restoring defaults
+  // Updated restore default data functionality
   async restoreDefaultData() {
-    this.mergeDefaultRaces(defaultRaces);
-    this.mergeDefaultClasses(defaultClasses);
+    const racesToAdd = JSON.parse(JSON.stringify(defaultRaces));
+    const classesToAdd = JSON.parse(JSON.stringify(defaultClasses));
+    this.mergeDefaultRaces(racesToAdd);
+    this.mergeDefaultClasses(classesToAdd);
+    new import_obsidian2.Notice("Default races and classes have been restored!");
     await this.plugin.saveSettings();
+    this.display();
   }
   mergeDefaultRaces(defaultRaces2) {
     const existingRaces = /* @__PURE__ */ new Map();
     this.plugin.settings.races.forEach((race) => existingRaces.set(race.name, race));
     defaultRaces2.forEach((defaultRace) => {
       if (!existingRaces.has(defaultRace.name)) {
+        console.log(`Adding missing race: ${defaultRace.name}`);
         this.plugin.settings.races.push(defaultRace);
       }
     });
@@ -2872,6 +2747,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     this.plugin.settings.classes.forEach((cls) => existingClasses.set(cls.name, cls));
     defaultClasses2.forEach((defaultClass) => {
       if (!existingClasses.has(defaultClass.name)) {
+        console.log(`Adding missing class: ${defaultClass.name}`);
         this.plugin.settings.classes.push(defaultClass);
       } else {
         const existingClass = existingClasses.get(defaultClass.name);
@@ -2885,6 +2761,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
           }
           defaultClass.subclasses.forEach((defaultSub) => {
             if (!existingSubclasses.has(defaultSub.name) && existingClass.subclasses) {
+              console.log(`Adding missing subclass ${defaultSub.name} to ${defaultClass.name}`);
               existingClass.subclasses.push(defaultSub);
             }
           });
@@ -2897,7 +2774,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    */
   addStatblockFormatSection(contentEl) {
     const statblockSection = contentEl.createDiv("statblock-format-section");
-    statblockSection.createEl("h2", { text: "Statblock Format" });
+    statblockSection.createEl("h2", {
+      text: "Statblock Format"
+    });
     statblockSection.createEl("p", {
       text: "Select how NPC statblocks should be formatted when inserted into your notes.",
       cls: "setting-item-description"
@@ -2915,7 +2794,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   addRacesSection(contentEl) {
     const racesSection = contentEl.createDiv("races-section");
     const headerContainer = racesSection.createDiv("section-header");
-    headerContainer.createEl("h2", { text: "Races" });
+    headerContainer.createEl("h2", {
+      text: "Races"
+    });
     headerContainer.createEl("p", {
       text: "Manage the available races for NPC generation.",
       cls: "setting-item-description"
@@ -2940,7 +2821,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       raceHeader.style.marginBottom = "8px";
       raceHeader.createEl("h3", {
         text: race.name,
-        attr: { style: "margin: 0; font-size: 1.1em;" }
+        attr: {
+          style: "margin: 0; font-size: 1.1em;"
+        }
       });
       const raceDescription = raceCard.createDiv("race-description");
       raceDescription.style.fontSize = "0.9em";
@@ -2967,7 +2850,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
   addClassesSection(contentEl) {
     const classesSection = contentEl.createDiv("classes-section");
     const headerContainer = classesSection.createDiv("section-header");
-    headerContainer.createEl("h2", { text: "Classes" });
+    headerContainer.createEl("h2", {
+      text: "Classes"
+    });
     headerContainer.createEl("p", {
       text: "Manage the available classes and subclasses for NPC generation.",
       cls: "setting-item-description"
@@ -3008,7 +2893,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       featuresSection.style.marginBottom = "10px";
       featuresSection.createEl("h4", {
         text: "Class Features",
-        attr: { style: "margin: 0 0 5px 0; font-size: 1em;" }
+        attr: {
+          style: "margin: 0 0 5px 0; font-size: 1em;"
+        }
       });
       if (characterClass.features && characterClass.features.length > 0) {
         const featuresList = featuresSection.createEl("ul");
@@ -3022,7 +2909,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       } else {
         featuresSection.createEl("p", {
           text: "No features defined.",
-          attr: { style: "color: var(--text-muted); font-style: italic; margin: 0;" }
+          attr: {
+            style: "color: var(--text-muted); font-style: italic; margin: 0;"
+          }
         });
       }
       const subclassesSection = classDetails.createDiv("subclasses-section");
@@ -3033,9 +2922,13 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       subclassHeader.style.marginBottom = "5px";
       subclassHeader.createEl("h4", {
         text: "Subclasses",
-        attr: { style: "margin: 0; font-size: 1em;" }
+        attr: {
+          style: "margin: 0; font-size: 1em;"
+        }
       });
-      const addSubclassButton = subclassHeader.createEl("button", { text: "Add Subclass" });
+      const addSubclassButton = subclassHeader.createEl("button", {
+        text: "Add Subclass"
+      });
       addSubclassButton.style.fontSize = "0.8em";
       addSubclassButton.style.padding = "2px 6px";
       addSubclassButton.addEventListener("click", () => {
@@ -3074,7 +2967,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       } else {
         subclassesSection.createEl("p", {
           text: "No subclasses defined.",
-          attr: { style: "color: var(--text-muted); font-style: italic; margin: 0;" }
+          attr: {
+            style: "color: var(--text-muted); font-style: italic; margin: 0;"
+          }
         });
       }
       const classActions = classDetails.createDiv("class-actions");
@@ -3106,7 +3001,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     contentEl.empty();
     const customParamsSection = contentEl.createDiv("custom-parameters-section");
     const headerContainer = customParamsSection.createDiv("section-header");
-    headerContainer.createEl("h2", { text: "Custom Parameters" });
+    headerContainer.createEl("h2", {
+      text: "Custom Parameters"
+    });
     headerContainer.createEl("p", {
       text: "Add custom fields to your NPC generation form and statblocks.",
       cls: "setting-item-description"
@@ -3116,9 +3013,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         this.createCustomParameterModal();
       });
     });
-    const customParams = this.plugin.settings.customParameters.filter(
-      (param) => param.name !== "spellcasting" && param.name !== "possessions"
-    );
+    const customParams = this.plugin.settings.customParameters.filter((param) => param.name !== "spellcasting" && param.name !== "possessions");
     const paramsContainer = customParamsSection.createDiv("params-container");
     paramsContainer.style.marginTop = "20px";
     if (customParams.length === 0) {
@@ -3159,7 +3054,9 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
    */
   createCustomParameterModal(existingParam) {
     const modal = new import_obsidian2.Modal(this.app);
-    let parameter = existingParam ? { ...existingParam } : {
+    let parameter = existingParam ? {
+      ...existingParam
+    } : {
       name: "",
       label: "",
       format: '- "{content}"',
@@ -3219,138 +3116,23 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     modal.open();
   }
   /**
-   * Open Subclass Modal for Adding/Editing
-   */
-  openSubclassModal(characterClass, classIndex, existingSubclass, subclassIndex) {
-    const modal = new import_obsidian2.Modal(this.app);
-    modal.titleEl.setText(existingSubclass ? `Edit ${existingSubclass.name} Subclass` : `Add New Subclass for ${characterClass.name}`);
-    modal.contentEl.style.width = "500px";
-    new import_obsidian2.Setting(modal.contentEl).setName("Subclass Name").addText((text) => {
-      text.setValue((existingSubclass == null ? void 0 : existingSubclass.name) || "").setPlaceholder("Enter subclass name").onChange((value) => {
-        if (existingSubclass) existingSubclass.name = value;
-      });
-    });
-    new import_obsidian2.Setting(modal.contentEl).setName("Description").setDesc("Brief description of the subclass and its strengths").addTextArea((text) => {
-      text.setValue((existingSubclass == null ? void 0 : existingSubclass.description) || "").setPlaceholder("Description of the subclass...").onChange((value) => {
-        if (existingSubclass) existingSubclass.description = value;
-      });
-      const textEl = text.inputEl;
-      textEl.style.width = "100%";
-      textEl.style.height = "100px";
-    });
-    const featuresContainer = modal.contentEl.createDiv("subclass-features");
-    featuresContainer.createEl("h3", { text: "Subclass Features" });
-    featuresContainer.style.marginTop = "20px";
-    const featuresList = featuresContainer.createDiv("features-list");
-    const addFeatureRow = (feature) => {
-      var _a;
-      const featureRow = featuresList.createDiv("feature-row");
-      featureRow.style.display = "flex";
-      featureRow.style.marginBottom = "10px";
-      featureRow.style.gap = "10px";
-      const levelInput = document.createElement("input");
-      levelInput.type = "number";
-      levelInput.min = "1";
-      levelInput.max = "20";
-      levelInput.value = ((_a = feature == null ? void 0 : feature.level) == null ? void 0 : _a.toString()) || "3";
-      levelInput.style.width = "60px";
-      levelInput.placeholder = "Level";
-      featureRow.appendChild(levelInput);
-      const nameInput = document.createElement("input");
-      nameInput.type = "text";
-      nameInput.value = (feature == null ? void 0 : feature.name) || "";
-      nameInput.style.flex = "1";
-      nameInput.placeholder = "Feature name";
-      featureRow.appendChild(nameInput);
-      const descInput = document.createElement("input");
-      descInput.type = "text";
-      descInput.value = (feature == null ? void 0 : feature.description) || "";
-      descInput.style.flex = "2";
-      descInput.placeholder = "Feature description";
-      featureRow.appendChild(descInput);
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "\xD7";
-      deleteBtn.style.color = "var(--text-error)";
-      deleteBtn.addEventListener("click", () => {
-        featureRow.remove();
-      });
-      featureRow.appendChild(deleteBtn);
-      return { row: featureRow, levelInput, nameInput, descInput };
-    };
-    if ((existingSubclass == null ? void 0 : existingSubclass.features) && existingSubclass.features.length > 0) {
-      existingSubclass.features.forEach((feature) => {
-        addFeatureRow(feature);
-      });
-    } else {
-      addFeatureRow();
-    }
-    const addFeatureButton = featuresContainer.createEl("button", { text: "Add Feature" });
-    addFeatureButton.style.marginTop = "10px";
-    addFeatureButton.addEventListener("click", () => {
-      addFeatureRow();
-    });
-    const buttonContainer = modal.contentEl.createDiv("button-container");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.marginTop = "20px";
-    buttonContainer.style.gap = "10px";
-    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
-    cancelButton.addEventListener("click", () => {
-      modal.close();
-    });
-    const saveButton = buttonContainer.createEl("button", {
-      text: "Save Subclass",
-      cls: "mod-cta"
-    });
-    saveButton.addEventListener("click", async () => {
-      const nameInput = modal.contentEl.querySelector('input[placeholder="Enter subclass name"]');
-      const descriptionInput = modal.contentEl.querySelector('textarea[placeholder="Description of the subclass..."]');
-      if (!nameInput.value.trim()) {
-        new import_obsidian2.Notice("Subclass name is required");
-        return;
-      }
-      const features = [];
-      const featureRows = featuresList.querySelectorAll(".feature-row");
-      featureRows.forEach((row) => {
-        const inputs = row.querySelectorAll("input");
-        if (inputs[1].value.trim()) {
-          features.push({
-            level: parseInt(inputs[0].value, 10) || 3,
-            name: inputs[1].value.trim(),
-            description: inputs[2].value.trim() || "No description provided."
-          });
-        }
-      });
-      features.sort((a, b) => a.level - b.level);
-      const subclass = {
-        name: nameInput.value.trim(),
-        description: descriptionInput.value.trim() || "No description provided.",
-        features
-      };
-      if (!characterClass.subclasses) {
-        characterClass.subclasses = [];
-      }
-      if (existingSubclass && subclassIndex !== void 0) {
-        characterClass.subclasses[subclassIndex] = subclass;
-      } else {
-        characterClass.subclasses.push(subclass);
-      }
-      this.plugin.settings.classes[classIndex] = characterClass;
-      await this.plugin.saveSettings();
-      this.display();
-      modal.close();
-    });
-    modal.open();
-  }
-  /**
    * Open Race Modal for Adding/Editing
    */
   openRaceModal(existingRace, index) {
     const modal = new import_obsidian2.Modal(this.app);
     modal.titleEl.setText(existingRace ? `Edit ${existingRace.name} Race` : "Add New Race");
-    let raceToEdit = existingRace ? { ...existingRace } : {
+    let raceToEdit = existingRace ? {
+      ...existingRace
+    } : {
       name: "",
-      abilityScoreAdjustments: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      abilityScoreAdjustments: {
+        str: 0,
+        dex: 0,
+        con: 0,
+        int: 0,
+        wis: 0,
+        cha: 0
+      },
       traits: [],
       size: "Medium",
       speed: 30,
@@ -3370,19 +3152,23 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       });
     });
     const traitsContainer = modal.contentEl.createDiv("race-traits");
-    traitsContainer.createEl("h3", { text: "Racial Traits" });
+    traitsContainer.createEl("h3", {
+      text: "Racial Traits"
+    });
     const traitsList = traitsContainer.createEl("ul");
-    ((existingRace == null ? void 0 : existingRace.traits) || []).forEach((trait, traitIndex) => {
+    (raceToEdit.traits || []).forEach((trait, traitIndex) => {
       const traitItem = traitsList.createEl("li");
-      traitItem.createEl("span", { text: trait });
+      traitItem.createEl("span", {
+        text: trait
+      });
       traitItem.createEl("button", {
         text: "\xD7",
-        attr: { style: "margin-left: 10px; color: var(--text-error);" }
-      }).addEventListener("click", () => {
-        if (existingRace) {
-          existingRace.traits.splice(traitIndex, 1);
-          traitItem.remove();
+        attr: {
+          style: "margin-left: 10px; color: var(--text-error);"
         }
+      }).addEventListener("click", () => {
+        raceToEdit.traits.splice(traitIndex, 1);
+        traitItem.remove();
       });
     });
     const newTraitContainer = modal.contentEl.createDiv("new-trait-input");
@@ -3394,45 +3180,46 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       placeholder: "Add a new trait"
     });
     traitInput.style.flex = "1";
-    const addTraitButton = newTraitContainer.createEl("button", { text: "Add Trait" });
+    const addTraitButton = newTraitContainer.createEl("button", {
+      text: "Add Trait"
+    });
     addTraitButton.addEventListener("click", () => {
       const newTrait = traitInput.value.trim();
       if (newTrait) {
-        if (!existingRace) {
-          existingRace = {
-            name: "",
-            abilityScoreAdjustments: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
-            traits: [],
-            size: "Medium",
-            speed: 30,
-            languages: ["Common"]
-          };
-        }
-        existingRace.traits.push(newTrait);
+        raceToEdit.traits.push(newTrait);
         const traitItem = traitsList.createEl("li");
-        traitItem.createEl("span", { text: newTrait });
+        traitItem.createEl("span", {
+          text: newTrait
+        });
         traitItem.createEl("button", {
           text: "\xD7",
-          attr: { style: "margin-left: 10px; color: var(--text-error);" }
+          attr: {
+            style: "margin-left: 10px; color: var(--text-error);"
+          }
         }).addEventListener("click", () => {
-          existingRace.traits.splice(existingRace.traits.length - 1, 1);
+          const idx = raceToEdit.traits.indexOf(newTrait);
+          if (idx !== -1) {
+            raceToEdit.traits.splice(idx, 1);
+          }
           traitItem.remove();
         });
         traitInput.value = "";
       }
     });
     new import_obsidian2.Setting(modal.contentEl).setName("Size").addDropdown((dropdown) => {
-      dropdown.addOption("Small", "Small").addOption("Medium", "Medium").addOption("Large", "Large").setValue((existingRace == null ? void 0 : existingRace.size) || "Medium").onChange((value) => {
-        if (existingRace) existingRace.size = value;
+      dropdown.addOption("Small", "Small").addOption("Medium", "Medium").addOption("Large", "Large").setValue(raceToEdit.size || "Medium").setValue(raceToEdit.size || "Medium").onChange((value) => {
+        raceToEdit.size = value;
       });
     });
     new import_obsidian2.Setting(modal.contentEl).setName("Speed").addSlider((slider) => {
-      slider.setLimits(20, 40, 5).setValue((existingRace == null ? void 0 : existingRace.speed) || 30).setDynamicTooltip().onChange((value) => {
-        if (existingRace) existingRace.speed = value;
+      slider.setLimits(20, 40, 5).setValue(raceToEdit.speed || 30).setDynamicTooltip().onChange((value) => {
+        raceToEdit.speed = value;
       });
     });
     const languagesContainer = modal.contentEl.createDiv("race-languages");
-    languagesContainer.createEl("h3", { text: "Languages" });
+    languagesContainer.createEl("h3", {
+      text: "Languages"
+    });
     const commonLanguages = [
       "Common",
       "Dwarvish",
@@ -3461,7 +3248,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
       languageCheck.style.alignItems = "center";
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = (existingRace == null ? void 0 : existingRace.languages.includes(language)) || false;
+      checkbox.checked = raceToEdit.languages.includes(language) || false;
       checkbox.id = `lang-${language}`;
       languageCheck.appendChild(checkbox);
       const label = document.createElement("label");
@@ -3478,6 +3265,13 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
           new import_obsidian2.Notice("Race name is required");
           return;
         }
+        raceToEdit.languages = [];
+        commonLanguages.forEach((language) => {
+          const checkbox = document.getElementById(`lang-${language}`);
+          if (checkbox && checkbox.checked) {
+            raceToEdit.languages.push(language);
+          }
+        });
         if (index !== void 0) {
           this.plugin.settings.races[index] = raceToEdit;
         } else {
@@ -3496,8 +3290,8 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     modal.open();
   }
   /**
-   * Open Class Modal for Adding/Editing
-   */
+      * Open Class Modal for Adding/Editing
+      */
   openClassModal(existingClass, index) {
     const modal = new import_obsidian2.Modal(this.app);
     modal.titleEl.setText(existingClass ? `Edit ${existingClass.name} Class` : "Add New Class");
@@ -3664,7 +3458,7 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
         return;
       }
       classToEdit.name = nameInput.value.trim();
-      this.captureFormValuesForClass(classToEdit, classTabContent);
+      this.captureClassFormValues(classToEdit, activeClassTab, classTabContent);
       if (index !== void 0) {
         this.plugin.settings.classes[index] = classToEdit;
       } else {
@@ -3682,19 +3476,220 @@ var NPCGeneratorSettingsTab = class extends import_obsidian2.PluginSettingTab {
     });
     modal.open();
   }
-  // Helper method to ensure we get all the form values
-  captureFormValuesForClass(classToEdit, formContainer) {
-    classToEdit.savingThrows = [];
-    const abilities = ["str", "dex", "con", "int", "wis", "cha"];
-    abilities.forEach((ability) => {
-      const checkbox = formContainer.querySelector(`#save-${ability}`);
-      if (checkbox && checkbox.checked) {
-        classToEdit.savingThrows.push(ability);
-      }
+  /**
+      * Open Subclass Modal for Adding/Editing
+      */
+  openSubclassModal(characterClass, classIndex, existingSubclass, subclassIndex) {
+    const modal = new import_obsidian2.Modal(this.app);
+    modal.titleEl.setText(existingSubclass ? `Edit ${existingSubclass.name} Subclass` : `Add New Subclass for ${characterClass.name}`);
+    modal.contentEl.style.width = "500px";
+    new import_obsidian2.Setting(modal.contentEl).setName("Subclass Name").addText((text) => {
+      text.setValue((existingSubclass == null ? void 0 : existingSubclass.name) || "").setPlaceholder("Enter subclass name").onChange((value) => {
+        if (existingSubclass) existingSubclass.name = value;
+      });
     });
-    const skillChoicesInput = formContainer.querySelector("#skill-choices");
-    if (skillChoicesInput) {
-      classToEdit.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
+    new import_obsidian2.Setting(modal.contentEl).setName("Description").setDesc("Brief description of the subclass and its strengths").addTextArea((text) => {
+      text.setValue((existingSubclass == null ? void 0 : existingSubclass.description) || "").setPlaceholder("Description of the subclass...").onChange((value) => {
+        if (existingSubclass) existingSubclass.description = value;
+      });
+      const textEl = text.inputEl;
+      textEl.style.width = "100%";
+      textEl.style.height = "100px";
+    });
+    const featuresContainer = modal.contentEl.createDiv("subclass-features");
+    featuresContainer.createEl("h3", { text: "Subclass Features" });
+    featuresContainer.style.marginTop = "20px";
+    const featuresList = featuresContainer.createDiv("features-list");
+    const addFeatureRow = (feature) => {
+      var _a;
+      const featureRow = featuresList.createDiv("feature-row");
+      featureRow.style.display = "flex";
+      featureRow.style.marginBottom = "10px";
+      featureRow.style.gap = "10px";
+      const levelInput = document.createElement("input");
+      levelInput.type = "number";
+      levelInput.min = "1";
+      levelInput.max = "20";
+      levelInput.value = ((_a = feature == null ? void 0 : feature.level) == null ? void 0 : _a.toString()) || "3";
+      levelInput.style.width = "60px";
+      levelInput.placeholder = "Level";
+      featureRow.appendChild(levelInput);
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = (feature == null ? void 0 : feature.name) || "";
+      nameInput.style.flex = "1";
+      nameInput.placeholder = "Feature name";
+      featureRow.appendChild(nameInput);
+      const descInput = document.createElement("input");
+      descInput.type = "text";
+      descInput.value = (feature == null ? void 0 : feature.description) || "";
+      descInput.style.flex = "2";
+      descInput.placeholder = "Feature description";
+      featureRow.appendChild(descInput);
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "\xD7";
+      deleteBtn.style.color = "var(--text-error)";
+      deleteBtn.addEventListener("click", () => {
+        featureRow.remove();
+      });
+      featureRow.appendChild(deleteBtn);
+      return { row: featureRow, levelInput, nameInput, descInput };
+    };
+    if ((existingSubclass == null ? void 0 : existingSubclass.features) && existingSubclass.features.length > 0) {
+      existingSubclass.features.forEach((feature) => {
+        addFeatureRow(feature);
+      });
+    } else {
+      addFeatureRow();
+    }
+    const addFeatureButton = featuresContainer.createEl("button", { text: "Add Feature" });
+    addFeatureButton.style.marginTop = "10px";
+    addFeatureButton.addEventListener("click", () => {
+      addFeatureRow();
+    });
+    const buttonContainer = modal.contentEl.createDiv("button-container");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "20px";
+    buttonContainer.style.gap = "10px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.addEventListener("click", () => {
+      modal.close();
+    });
+    const saveButton = buttonContainer.createEl("button", {
+      text: "Save Subclass",
+      cls: "mod-cta"
+    });
+    saveButton.addEventListener("click", async () => {
+      const nameInput = modal.contentEl.querySelector('input[placeholder="Enter subclass name"]');
+      const descriptionInput = modal.contentEl.querySelector('textarea[placeholder="Description of the subclass..."]');
+      if (!nameInput.value.trim()) {
+        new import_obsidian2.Notice("Subclass name is required");
+        return;
+      }
+      const features = [];
+      const featureRows = featuresList.querySelectorAll(".feature-row");
+      featureRows.forEach((row) => {
+        const inputs = row.querySelectorAll("input");
+        if (inputs[1].value.trim()) {
+          features.push({
+            level: parseInt(inputs[0].value, 10) || 3,
+            name: inputs[1].value.trim(),
+            description: inputs[2].value.trim() || "No description provided."
+          });
+        }
+      });
+      features.sort((a, b) => a.level - b.level);
+      const subclass = {
+        name: nameInput.value.trim(),
+        description: descriptionInput.value.trim() || "No description provided.",
+        features
+      };
+      if (!characterClass.subclasses) {
+        characterClass.subclasses = [];
+      }
+      if (existingSubclass && subclassIndex !== void 0) {
+        characterClass.subclasses[subclassIndex] = subclass;
+      } else {
+        characterClass.subclasses.push(subclass);
+      }
+      this.plugin.settings.classes[classIndex] = characterClass;
+      await this.plugin.saveSettings();
+      this.display();
+      modal.close();
+    });
+    modal.open();
+  }
+  /**
+   * Capture form values for class based on the active tab
+   */
+  captureClassFormValues(classToEdit, activeTab, formContainer) {
+    switch (activeTab) {
+      case "saves":
+        classToEdit.savingThrows = [];
+        const abilities = ["str", "dex", "con", "int", "wis", "cha"];
+        abilities.forEach((ability) => {
+          const checkbox = formContainer.querySelector(`#save-${ability}`);
+          if (checkbox && checkbox.checked) {
+            classToEdit.savingThrows.push(ability);
+          }
+        });
+        break;
+      case "skills":
+        classToEdit.skills = [];
+        const skillChoicesInput = formContainer.querySelector("#skill-choices");
+        if (skillChoicesInput) {
+          classToEdit.skillChoices = parseInt(skillChoicesInput.value, 10) || 2;
+        }
+        const allSkills = [
+          "Acrobatics",
+          "Animal Handling",
+          "Arcana",
+          "Athletics",
+          "Deception",
+          "History",
+          "Insight",
+          "Intimidation",
+          "Investigation",
+          "Medicine",
+          "Nature",
+          "Perception",
+          "Performance",
+          "Persuasion",
+          "Religion",
+          "Sleight of Hand",
+          "Stealth",
+          "Survival"
+        ];
+        allSkills.forEach((skill) => {
+          const skillCheckbox = formContainer.querySelector(`#skill-${skill}`);
+          if (skillCheckbox && skillCheckbox.checked) {
+            classToEdit.skills.push(skill);
+          }
+        });
+        break;
+      case "features":
+        classToEdit.features = [];
+        const featureRows = formContainer.querySelectorAll(".feature-row");
+        featureRows.forEach((row) => {
+          const inputs = row.querySelectorAll("input");
+          if (inputs[1].value.trim()) {
+            classToEdit.features.push({
+              level: parseInt(inputs[0].value, 10) || 1,
+              name: inputs[1].value.trim(),
+              description: inputs[2].value.trim() || "No description provided."
+            });
+          }
+        });
+        break;
+      case "proficiencies":
+        classToEdit.proficiencies = {
+          weapons: [],
+          armor: [],
+          tools: []
+        };
+        const weaponInputs = formContainer.querySelectorAll('input[name="weapon-prof"]');
+        weaponInputs.forEach((input) => {
+          const value = input.value.trim();
+          if (value) {
+            classToEdit.proficiencies.weapons.push(value);
+          }
+        });
+        const armorInputs = formContainer.querySelectorAll('input[name="armor-prof"]');
+        armorInputs.forEach((input) => {
+          const value = input.value.trim();
+          if (value) {
+            classToEdit.proficiencies.armor.push(value);
+          }
+        });
+        const toolInputs = formContainer.querySelectorAll('input[name="tool-prof"]');
+        toolInputs.forEach((input) => {
+          const value = input.value.trim();
+          if (value) {
+            classToEdit.proficiencies.tools.push(value);
+          }
+        });
+        break;
     }
   }
   /**
